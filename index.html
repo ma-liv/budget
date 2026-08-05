@@ -24,15 +24,20 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  Babel.registerPreset("react-classic", {
+    presets: [[Babel.availablePresets.react, { runtime: "classic" }]],
+  });
+</script>
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel" data-presets="react">
+<script type="text/babel" data-presets="react-classic">
 const { useState, useEffect, useMemo, useRef } = React;
 
 // ====== 1) COLLE TES INFOS SUPABASE ICI (Settings > API dans ton projet) ======
-const SUPABASE_URL = "https://tezdewwkdzbpjeybzggg.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://tezdewwkdzbpjeybzggg.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_MXPoSntRqagjLA_DiMN58Q_eZZUAHC2";
 // ================================================================================
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
