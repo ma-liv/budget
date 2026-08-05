@@ -40,7 +40,15 @@ const { useState, useEffect, useMemo, useRef } = React;
 const SUPABASE_URL = "https://tezdewwkdzbpjeybzggg.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_MXPoSntRqagjLA_DiMN58Q_eZZUAHC2";
 // ================================================================================
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storage: window.localStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
+
 const LOCAL_CACHE_KEY = "mon-budget-cache-v1";
 
 // ---- Design tokens ----
