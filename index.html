@@ -80,8 +80,7 @@ const catInfo = (id) => CATEGORIES.find((c) => c.id === id) || CATEGORIES[CATEGO
 const uid = () => Math.random().toString(36).slice(2, 10);
 const fmt = (n) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(Number(n) || 0);
 
-const USER_NAME = "Olivia";
-const DEFAULT_DATA = { onboarded: false, profile: null, income: 0, charges: [], expenses: [], goals: [] };
+const DEFAULT_DATA = { onboarded: false, profile: null, income: 0, charges: [], expenses: [], goals: [], history: [] };
 
 const TIPS = [
   "Automatise un virement vers ton épargne le jour où tu es payée : ce que tu ne vois pas, tu ne le dépenses pas.",
@@ -146,15 +145,22 @@ function monthsUntil(dateStr) {
 }
 function objectiveLabel(profile) {
   if (!profile) return null;
-  if (profile.motivation === "projet") {
-    const pt = PROJECT_TYPES.find((p) => p.id === profile.projectType);
-    return `Financer ton projet${pt ? " : " + pt.label.toLowerCase() : ""}`;
+  const motivations = Array.isArray(profile.motivation) ? profile.motivation : profile.motivation ? [profile.motivation] : [];
+  if (motivations.includes("projet")) {
+    const projectTypes = Array.isArray(profile.projectType) ? profile.projectType : profile.projectType ? [profile.projectType] : [];
+    const labels = projectTypes.map((id) => PROJECT_TYPES.find((p) => p.id === id)?.label?.toLowerCase()).filter(Boolean);
+    if (labels.length) {
+      return `Financer ${labels.length > 1 ? "tes projets" : "ton projet"}${labels.length > 1 ? ` : ${labels.join(", ")}` : ` : ${labels[0]}`}`;
+    }
+    return "Financer ton projet";
   }
-  const m = MOTIVATIONS.find((x) => x.id === profile.motivation);
-  return m ? m.label : null;
+  const labels = motivations.map((id) => MOTIVATIONS.find((x) => x.id === id)?.label).filter(Boolean);
+  return labels.length ? labels.join(" · ") : null;
 }
 function objectiveEmoji(profile) {
-  const m = MOTIVATIONS.find((x) => x.id === profile?.motivation);
+  const motivations = Array.isArray(profile?.motivation) ? profile.motivation : profile?.motivation ? [profile.motivation] : [];
+  const first = motivations[0];
+  const m = MOTIVATIONS.find((x) => x.id === first);
   return m ? m.emoji : "🧭";
 }
 
@@ -254,6 +260,7 @@ function App({ session }) {
   const [period, setPeriod] = useState("mois");
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showGoalForm, setShowGoalForm] = useState(false);
+  const [goalEditor, setGoalEditor] = useState(null);
   const [showIncomeEdit, setShowIncomeEdit] = useState(false);
   const [chargeEditor, setChargeEditor] = useState(null);
   const [editProfile, setEditProfile] = useState(false);
@@ -298,14 +305,56 @@ function App({ session }) {
   }, [data.charges, variablePeriodExpenses, period]);
 
   const addExpense = (expense) => { persist({ ...data, expenses: [...data.expenses, { ...expense, id: uid() }] }); setShowExpenseForm(false); };
-  const deleteExpense = (id) => persist({ ...data, expenses: data.expenses.filter((e) => e.id !== id) });
+  const deleteExpense = (id) => {
+    if (!window.confirm("Supprimer cette dépense ?")) return;
+    persist({ ...data, expenses: data.expenses.filter((e) => e.id !== id) });
+  };
   const saveCharge = (charge) => {
     if (charge.id) persist({ ...data, charges: data.charges.map((c) => (c.id === charge.id ? charge : c)) });
     else persist({ ...data, charges: [...data.charges, { ...charge, id: uid() }] });
     setChargeEditor(null);
   };
   const deleteCharge = (id) => persist({ ...data, charges: data.charges.filter((c) => c.id !== id) });
-  const addGoal = (goal) => { persist({ ...data, goals: [...data.goals, { ...goal, id: uid(), current: Number(goal.current) || 0 }] }); setShowGoalForm(false); };
+  const saveGoal = (goal) => {
+    const adjustmentType = goal.incomeAdjustmentType === "decrease" ? "decrease" : "increase";
+    const adjustmentAmount = Number(goal.incomeAdjustmentAmount) || 0;
+    const incomeDelta = adjustmentType === "decrease" ? -adjustmentAmount : adjustmentAmount;
+    const trace = Array.isArray(goal.trace) ? goal.trace : [];
+    const newTraceEntry = adjustmentAmount > 0 ? [{
+      id: uid(),
+      createdAt: new Date().toISOString(),
+      type: "income-adjustment",
+      label: adjustmentType === "decrease" ? "Réduction du revenu mensuel" : "Augmentation du revenu mensuel",
+      amount: adjustmentAmount,
+      source: goal.source || "Non précisé",
+      direction: adjustmentType,
+    }] : [];
+
+    const nextGoals = goal.id
+      ? data.goals.map((g) => (g.id === goal.id ? { ...g, ...goal, current: Number(goal.current) || 0, trace: [...trace, ...newTraceEntry] } : g))
+      : [...data.goals, { ...goal, id: uid(), current: Number(goal.current) || 0, trace: [...trace, ...newTraceEntry] }];
+
+    const nextData = {
+      ...data,
+      goals: nextGoals,
+      income: adjustmentAmount > 0 ? Number(data.income || 0) + incomeDelta : Number(data.income || 0),
+      history: adjustmentAmount > 0 ? [
+        ...((data.history || []).slice(0, 9)),
+        {
+          id: uid(),
+          createdAt: new Date().toISOString(),
+          label: `${goal.name || "Objectif"} · ${goal.source || "Origine non précisée"}`,
+          amount: adjustmentAmount,
+          direction: adjustmentType,
+          type: "savings-origin",
+        }
+      ] : data.history || [],
+    };
+
+    persist(nextData);
+    setShowGoalForm(false);
+    setGoalEditor(null);
+  };
   const deleteGoal = (id) => persist({ ...data, goals: data.goals.filter((g) => g.id !== id) });
   const contribute = (id, amount) => persist({ ...data, goals: data.goals.map((g) => (g.id === id ? { ...g, current: Math.max(0, Number(g.current) + amount) } : g)) });
   const updateIncome = (val) => { persist({ ...data, income: Number(val) || 0 }); setShowIncomeEdit(false); };
@@ -351,6 +400,9 @@ function App({ session }) {
   if (!data.onboarded) return <Onboarding onComplete={finishOnboarding} />;
 
   const monthLabel = new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  const now = new Date();
+  const greeting = now.getHours() < 18 ? "Bonjour" : "Bonsoir";
+  const displayName = data.profile?.name?.trim() || "toi";
 
   return (
     <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", backgroundColor: BG, color: TEXT, minHeight: "100vh", paddingBottom: "calc(84px + env(safe-area-inset-bottom))" }}>
@@ -363,7 +415,7 @@ function App({ session }) {
       <header className="px-5 pb-5" style={{ borderBottom: `1px solid ${BORDER}`, paddingTop: "calc(2rem + env(safe-area-inset-top))" }}>
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs tracking-[0.2em] uppercase" style={{ color: ROSE }}>Bonjour {USER_NAME}</p>
+            <p className="text-xs tracking-[0.2em] uppercase" style={{ color: ROSE }}>{greeting} {displayName}</p>
             <h1 style={{ fontFamily: "'Fraunces', serif" }} className="text-3xl mt-1 font-semibold">Mon budget</h1>
             <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: TEXT_MUTED }} className="text-[11px] mt-1 capitalize">{monthLabel}</p>
           </div>
@@ -387,7 +439,7 @@ function App({ session }) {
         {tab === "depenses" && (
           <Expenses period={period} setPeriod={setPeriod} periodExpenses={variablePeriodExpenses} periodTotal={variablePeriodTotal} onDelete={deleteExpense} onAdd={() => setShowExpenseForm(true)} />
         )}
-        {tab === "epargne" && <Savings goals={data.goals} onAdd={() => setShowGoalForm(true)} onDelete={deleteGoal} onContribute={contribute} />}
+        {tab === "epargne" && <Savings goals={data.goals} onAdd={() => setShowGoalForm(true)} onDelete={deleteGoal} onEdit={(goal) => setGoalEditor(goal)} onContribute={contribute} />}
         {tab === "parcours" && (
           <Parcours data={data} onEditProfile={() => setEditProfile(true)} onExport={exportData} onImport={triggerImport} />
         )}
@@ -404,7 +456,8 @@ function App({ session }) {
 
       {showExpenseForm && <ExpenseForm onClose={() => setShowExpenseForm(false)} onSubmit={addExpense} />}
       {chargeEditor && <ChargeForm initial={typeof chargeEditor === "object" ? chargeEditor : null} onClose={() => setChargeEditor(null)} onSubmit={saveCharge} />}
-      {showGoalForm && <GoalForm onClose={() => setShowGoalForm(false)} onSubmit={addGoal} />}
+      {showGoalForm && <GoalForm onClose={() => setShowGoalForm(false)} onSubmit={saveGoal} />}
+      {goalEditor && <GoalForm initial={goalEditor} onClose={() => setGoalEditor(null)} onSubmit={saveGoal} />}
       {showIncomeEdit && <IncomeForm initial={data.income} onClose={() => setShowIncomeEdit(false)} onSubmit={updateIncome} />}
     </div>
   );
@@ -422,17 +475,29 @@ function OptionCard({ selected, onClick, label, emoji }) {
 }
 
 function Onboarding({ initial, onComplete, onClose }) {
-  const [answers, setAnswers] = useState(initial || { motivation: null, projectType: null, relationship: null, frequency: null });
-  const includesProject = answers.motivation === "projet";
-  const stepsOrder = ["motivation", ...(includesProject ? ["projectType"] : []), "relationship", "frequency", "summary"];
+  const [answers, setAnswers] = useState(initial || { name: "", motivation: [], projectType: [], relationship: [], frequency: [] });
+  const selectedMotivations = Array.isArray(answers.motivation) ? answers.motivation : answers.motivation ? [answers.motivation] : [];
+  const selectedProjectTypes = Array.isArray(answers.projectType) ? answers.projectType : answers.projectType ? [answers.projectType] : [];
+  const selectedRelationships = Array.isArray(answers.relationship) ? answers.relationship : answers.relationship ? [answers.relationship] : [];
+  const selectedFrequencies = Array.isArray(answers.frequency) ? answers.frequency : answers.frequency ? [answers.frequency] : [];
+  const includesProject = selectedMotivations.includes("projet");
+  const stepsOrder = ["profile", "motivation", ...(includesProject ? ["projectType"] : []), "relationship", "frequency", "summary"];
   const [stepIndex, setStepIndex] = useState(0);
   const current = stepsOrder[Math.min(stepIndex, stepsOrder.length - 1)];
   const set = (key, val) => setAnswers((a) => ({ ...a, [key]: val }));
+  const toggleChoice = (key, val) => {
+    setAnswers((a) => {
+      const currentValues = Array.isArray(a[key]) ? a[key] : a[key] ? [a[key]] : [];
+      const nextValues = currentValues.includes(val) ? currentValues.filter((item) => item !== val) : [...currentValues, val];
+      return { ...a, [key]: nextValues };
+    });
+  };
   const canNext =
-    (current === "motivation" && answers.motivation) ||
-    (current === "projectType" && answers.projectType) ||
-    (current === "relationship" && answers.relationship) ||
-    (current === "frequency" && answers.frequency) ||
+    current === "profile" ||
+    (current === "motivation" && selectedMotivations.length > 0) ||
+    (current === "projectType" && selectedProjectTypes.length > 0) ||
+    (current === "relationship" && selectedRelationships.length > 0) ||
+    (current === "frequency" && selectedFrequencies.length > 0) ||
     current === "summary";
   const next = () => setStepIndex((i) => Math.min(i + 1, stepsOrder.length - 1));
   const back = () => setStepIndex((i) => Math.max(i - 1, 0));
@@ -449,28 +514,41 @@ function Onboarding({ initial, onComplete, onClose }) {
       </div>
       <div className="px-5 flex-1 overflow-y-auto">
         <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: ROSE }}>{onClose ? "Ton profil" : "Avant de commencer"}</p>
+        {current === "profile" && (
+          <>
+            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-4">Comment je dois te saluer ?</h2>
+            <Field label="Prénom / pseudo">
+              <input className={inputClass} style={inputStyle} value={answers.name || ""} onChange={(e) => set("name", e.target.value)} placeholder="Prénom ou pseudo" />
+            </Field>
+            <p className="text-xs leading-relaxed" style={{ color: TEXT_MUTED }}>Ce prénom sera utilisé pour te saluer au bon moment du jour et rendre l'app plus personnelle.</p>
+          </>
+        )}
         {current === "motivation" && (
           <>
-            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-5">Qu'est-ce qui t'amène ici aujourd'hui ?</h2>
-            <div className="space-y-2.5">{MOTIVATIONS.map((m) => <OptionCard key={m.id} emoji={m.emoji} label={m.label} selected={answers.motivation === m.id} onClick={() => set("motivation", m.id)} />)}</div>
+            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Qu'est-ce qui t'amène ici aujourd'hui ?</h2>
+            <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux choisir plusieurs réponses.</p>
+            <div className="space-y-2.5">{MOTIVATIONS.map((m) => <OptionCard key={m.id} emoji={m.emoji} label={m.label} selected={selectedMotivations.includes(m.id)} onClick={() => toggleChoice("motivation", m.id)} />)}</div>
           </>
         )}
         {current === "projectType" && (
           <>
-            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-5">Quel type de projet ?</h2>
-            <div className="space-y-2.5">{PROJECT_TYPES.map((p) => <OptionCard key={p.id} label={p.label} selected={answers.projectType === p.id} onClick={() => set("projectType", p.id)} />)}</div>
+            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Quel type de projet ?</h2>
+            <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux en sélectionner plusieurs si besoin.</p>
+            <div className="space-y-2.5">{PROJECT_TYPES.map((p) => <OptionCard key={p.id} label={p.label} selected={selectedProjectTypes.includes(p.id)} onClick={() => toggleChoice("projectType", p.id)} />)}</div>
           </>
         )}
         {current === "relationship" && (
           <>
-            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-5">Comment décrirais-tu ta relation à l'argent aujourd'hui ?</h2>
-            <div className="space-y-2.5">{RELATIONSHIPS.map((r) => <OptionCard key={r.id} label={r.label} selected={answers.relationship === r.id} onClick={() => set("relationship", r.id)} />)}</div>
+            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Comment décrirais-tu ta relation à l'argent aujourd'hui ?</h2>
+            <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux choisir plusieurs réponses si ça te correspond.</p>
+            <div className="space-y-2.5">{RELATIONSHIPS.map((r) => <OptionCard key={r.id} label={r.label} selected={selectedRelationships.includes(r.id)} onClick={() => toggleChoice("relationship", r.id)} />)}</div>
           </>
         )}
         {current === "frequency" && (
           <>
-            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-5">À quelle fréquence veux-tu suivre ton budget ?</h2>
-            <div className="space-y-2.5">{FREQUENCIES.map((f) => <OptionCard key={f.id} label={f.label} selected={answers.frequency === f.id} onClick={() => set("frequency", f.id)} />)}</div>
+            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">À quelle fréquence veux-tu suivre ton budget ?</h2>
+            <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux en choisir plusieurs si tu veux varier.</p>
+            <div className="space-y-2.5">{FREQUENCIES.map((f) => <OptionCard key={f.id} label={f.label} selected={selectedFrequencies.includes(f.id)} onClick={() => toggleChoice("frequency", f.id)} />)}</div>
           </>
         )}
         {current === "summary" && (
@@ -485,8 +563,11 @@ function Onboarding({ initial, onComplete, onClose }) {
                 </div>
               </div>
               <div className="space-y-2 text-xs pt-3 border-t" style={{ borderColor: BORDER, color: TEXT_MUTED }}>
-                <p>Relation à l'argent : <span style={{ color: TEXT }}>{RELATIONSHIPS.find((r) => r.id === answers.relationship)?.label}</span></p>
-                <p>Suivi souhaité : <span style={{ color: TEXT }}>{FREQUENCIES.find((f) => f.id === answers.frequency)?.label}</span></p>
+                <p>Prénom : <span style={{ color: TEXT }}>{answers.name || "À renseigner"}</span></p>
+                <p>Motivations : <span style={{ color: TEXT }}>{selectedMotivations.map((id) => MOTIVATIONS.find((m) => m.id === id)?.label).filter(Boolean).join(", ") || "À préciser"}</span></p>
+                {includesProject && <p>Projets : <span style={{ color: TEXT }}>{selectedProjectTypes.map((id) => PROJECT_TYPES.find((p) => p.id === id)?.label).filter(Boolean).join(", ")}</span></p>}
+                <p>Relation à l'argent : <span style={{ color: TEXT }}>{selectedRelationships.map((id) => RELATIONSHIPS.find((r) => r.id === id)?.label).filter(Boolean).join(", ")}</span></p>
+                <p>Suivi souhaité : <span style={{ color: TEXT }}>{selectedFrequencies.map((id) => FREQUENCIES.find((f) => f.id === id)?.label).filter(Boolean).join(", ")}</span></p>
               </div>
             </div>
             <p className="text-xs leading-relaxed" style={{ color: TEXT_MUTED }}>On garde ce cap comme fil rouge — tu pourras le modifier à tout moment depuis l'onglet Parcours.</p>
@@ -550,10 +631,14 @@ function Dashboard({ data, totalCharges, variableMonthTotal, remaining, byCatego
     <div className="space-y-6">
       <ObjectiveBanner profile={data.profile} onEdit={onEditProfile} />
       <Card>
-        <button onClick={onEditIncome} className="text-left block">
-          <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>Revenu mensuel</p>
-          <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-2xl mt-1">{fmt(data.income)} €</p>
-        </button>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1">
+            <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>Revenu mensuel</p>
+            <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-2xl mt-1">{fmt(data.income)} €</p>
+            <p className="text-[11px] mt-1" style={{ color: TEXT_MUTED }}>Ajuste ce montant si ton revenu change d'un mois à l'autre.</p>
+          </div>
+          <button onClick={onEditIncome} className="shrink-0 px-3 py-2 rounded-full text-xs font-medium" style={{ backgroundColor: SURFACE_ALT, color: ROSE }}>✏️ Modifier</button>
+        </div>
         <div className="mt-5 grid grid-cols-3 gap-3 pt-4 border-t" style={{ borderColor: BORDER }}>
           <button onClick={onGoToCharges} className="text-left">
             <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Charges fixes</p>
@@ -685,7 +770,7 @@ function Expenses({ period, setPeriod, periodExpenses, periodTotal, onDelete, on
   );
 }
 
-function Savings({ goals, onAdd, onDelete, onContribute }) {
+function Savings({ goals, onAdd, onDelete, onContribute, onEdit }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -693,13 +778,13 @@ function Savings({ goals, onAdd, onDelete, onContribute }) {
         <button onClick={onAdd} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>+ Nouvel objectif</button>
       </div>
       {goals.length === 0 ? <EmptyState text="Crée un objectif d'épargne pour commencer à suivre tes progrès." /> : (
-        <div className="space-y-4">{goals.map((g) => <GoalCard key={g.id} goal={g} onDelete={onDelete} onContribute={onContribute} />)}</div>
+        <div className="space-y-4">{goals.map((g) => <GoalCard key={g.id} goal={g} onDelete={onDelete} onEdit={onEdit} onContribute={onContribute} />)}</div>
       )}
     </div>
   );
 }
 
-function GoalCard({ goal, onDelete, onContribute }) {
+function GoalCard({ goal, onDelete, onEdit, onContribute }) {
   const [amount, setAmount] = useState("");
   const pct = Math.min(100, (goal.current / goal.target) * 100 || 0);
   const ticks = 20;
@@ -707,12 +792,22 @@ function GoalCard({ goal, onDelete, onContribute }) {
   const months = goal.deadline ? monthsUntil(goal.deadline) : null;
   const monthlyNeeded = months ? Math.max(0, goal.target - goal.current) / months : null;
   const deadlineLabel = goal.deadline ? new Date(goal.deadline).toLocaleDateString("fr-FR", { month: "long", year: "numeric" }) : null;
+  const traceItems = Array.isArray(goal.trace) ? goal.trace : [];
   return (
     <Card>
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2"><span style={{ fontSize: 16 }}>🎯</span><p style={{ fontFamily: "'Fraunces', serif" }} className="text-lg">{goal.name}</p></div>
-        <button onClick={() => onDelete(goal.id)} style={{ color: TEXT_MUTED, fontSize: 14 }}>🗑️</button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={() => onEdit(goal)} style={{ color: TEXT_MUTED, fontSize: 14 }}>✏️</button>
+          <button onClick={() => onDelete(goal.id)} style={{ color: TEXT_MUTED, fontSize: 14 }}>🗑️</button>
+        </div>
       </div>
+      {(goal.source || goal.incomeAdjustmentAmount > 0) && (
+        <div className="mt-3 rounded-lg border px-3 py-2 text-[11px]" style={{ backgroundColor: SURFACE_ALT, borderColor: BORDER }}>
+          {goal.source ? <p className="mb-1">Origine : <span style={{ color: TEXT }}>{goal.source}</span></p> : null}
+          {goal.incomeAdjustmentAmount > 0 ? <p>Ajustement revenu : <span style={{ color: ROSE }}>{goal.incomeAdjustmentType === "decrease" ? "réduction" : "augmentation"} de {fmt(goal.incomeAdjustmentAmount)} € / mois</span></p> : null}
+        </div>
+      )}
       <div className="mt-4 flex gap-[3px] h-6 items-end">
         {Array.from({ length: ticks }).map((_, i) => <div key={i} className="flex-1 rounded-sm transition-all" style={{ height: i < filledTicks ? "100%" : "40%", backgroundColor: i < filledTicks ? ROSE : BORDER }} />)}
       </div>
@@ -721,6 +816,16 @@ function GoalCard({ goal, onDelete, onContribute }) {
         <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: ROSE }} className="text-sm">{Math.round(pct)}%</p>
       </div>
       {monthlyNeeded !== null && <p className="text-[11px] mt-1.5" style={{ color: SAGE }}>≈ {fmt(monthlyNeeded)} €/mois pour l'atteindre d'ici {deadlineLabel}</p>}
+      {traceItems.length > 0 && (
+        <div className="mt-3 rounded-lg border px-3 py-2" style={{ backgroundColor: BG, borderColor: BORDER }}>
+          <p className="text-[10px] uppercase tracking-[0.12em] mb-1" style={{ color: TEXT_MUTED }}>Historique</p>
+          {traceItems.slice(-2).reverse().map((entry) => (
+            <p key={entry.id} className="text-[11px] leading-relaxed" style={{ color: TEXT_MUTED }}>
+              {new Date(entry.createdAt).toLocaleDateString("fr-FR")} · {entry.label} · {entry.direction === "decrease" ? "−" : "+"}{fmt(entry.amount)} €
+            </p>
+          ))}
+        </div>
+      )}
       <div className="flex gap-2 mt-3">
         <input type="number" inputMode="decimal" placeholder="Montant" value={amount} onChange={(ev) => setAmount(ev.target.value)}
           className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none" style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, color: TEXT }} />
@@ -878,19 +983,41 @@ function ChargeForm({ initial, onClose, onSubmit }) {
   );
 }
 
-function GoalForm({ onClose, onSubmit }) {
-  const [name, setName] = useState("");
-  const [target, setTarget] = useState("");
-  const [current, setCurrent] = useState("");
-  const [deadline, setDeadline] = useState("");
+function GoalForm({ initial, onClose, onSubmit }) {
+  const [name, setName] = useState(initial?.name || "");
+  const [target, setTarget] = useState(initial?.target ?? "");
+  const [current, setCurrent] = useState(initial?.current ?? "");
+  const [deadline, setDeadline] = useState(initial?.deadline || "");
+  const [source, setSource] = useState(initial?.source || "");
+  const [incomeAdjustmentType, setIncomeAdjustmentType] = useState(initial?.incomeAdjustmentType || "none");
+  const [incomeAdjustmentAmount, setIncomeAdjustmentAmount] = useState(initial?.incomeAdjustmentAmount ?? "");
   return (
-    <Sheet title="Nouvel objectif d'épargne" onClose={onClose}>
+    <Sheet title={initial ? "Modifier l'objectif" : "Nouvel objectif d'épargne"} onClose={onClose}>
       <Field label="Nom de l'objectif"><input className={inputClass} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : Installation à Valence" /></Field>
       <Field label="Montant cible (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={target} onChange={(e) => setTarget(e.target.value)} placeholder="0" /></Field>
       <Field label="Déjà épargné (optionnel)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="0" /></Field>
       <Field label="Date cible (optionnel)"><input type="date" className={inputClass} style={inputStyle} value={deadline} onChange={(e) => setDeadline(e.target.value)} /></Field>
-      <button disabled={!name || !target || Number(target) <= 0} onClick={() => onSubmit({ name, target: Number(target), current: Number(current) || 0, deadline })}
-        className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>Créer l'objectif →</button>
+      <Field label="Origine de l'épargne"><input className={inputClass} style={inputStyle} value={source} onChange={(e) => setSource(e.target.value)} placeholder="Salaire, bonus, projet…" /></Field>
+      <Field label="Ajuster le revenu mensuel ?">
+        <select className={inputClass} style={inputStyle} value={incomeAdjustmentType} onChange={(e) => setIncomeAdjustmentType(e.target.value)}>
+          <option value="none">Aucun ajustement</option>
+          <option value="increase">Augmenter le revenu mensuel</option>
+          <option value="decrease">Réduire le revenu mensuel</option>
+        </select>
+      </Field>
+      <Field label="Montant de l'ajustement (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={incomeAdjustmentAmount} onChange={(e) => setIncomeAdjustmentAmount(e.target.value)} placeholder="0" /></Field>
+      <button disabled={!name || !target || Number(target) <= 0} onClick={() => onSubmit({
+        id: initial?.id,
+        name,
+        target: Number(target),
+        current: Number(current) || 0,
+        deadline,
+        source,
+        incomeAdjustmentType,
+        incomeAdjustmentAmount: incomeAdjustmentType === "none" ? 0 : Number(incomeAdjustmentAmount) || 0,
+        trace: initial?.trace || []
+      })}
+        className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>{initial ? "Enregistrer les changements" : "Créer l'objectif"} →</button>
     </Sheet>
   );
 }
