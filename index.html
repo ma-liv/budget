@@ -146,22 +146,42 @@ function monthsUntil(dateStr) {
 function objectiveLabel(profile) {
   if (!profile) return null;
   const motivations = Array.isArray(profile.motivation) ? profile.motivation : profile.motivation ? [profile.motivation] : [];
+  const projectTypes = Array.isArray(profile.projectType) ? profile.projectType : profile.projectType ? [profile.projectType] : [];
+  const motivationLabels = motivations.map((id) => MOTIVATIONS.find((x) => x.id === id)?.label).filter(Boolean);
+  const projectLabels = projectTypes.map((id) => PROJECT_TYPES.find((p) => p.id === id)?.label).filter(Boolean);
+
   if (motivations.includes("projet")) {
-    const projectTypes = Array.isArray(profile.projectType) ? profile.projectType : profile.projectType ? [profile.projectType] : [];
-    const labels = projectTypes.map((id) => PROJECT_TYPES.find((p) => p.id === id)?.label?.toLowerCase()).filter(Boolean);
-    if (labels.length) {
-      return `Financer ${labels.length > 1 ? "tes projets" : "ton projet"}${labels.length > 1 ? ` : ${labels.join(", ")}` : ` : ${labels[0]}`}`;
+    if (projectLabels.length) {
+      return `Construire un budget autour de tes projets : ${projectLabels.join(" · ")}`;
     }
-    return "Financer ton projet";
+    return "Construire un budget autour de tes projets";
   }
-  const labels = motivations.map((id) => MOTIVATIONS.find((x) => x.id === id)?.label).filter(Boolean);
-  return labels.length ? labels.join(" · ") : null;
+
+  if (motivationLabels.length > 1) {
+    return `Construire un budget autour de : ${motivationLabels.join(" · ")}`;
+  }
+
+  return motivationLabels[0] || "Construire un budget qui te ressemble";
 }
 function objectiveEmoji(profile) {
   const motivations = Array.isArray(profile?.motivation) ? profile.motivation : profile?.motivation ? [profile.motivation] : [];
   const first = motivations[0];
   const m = MOTIVATIONS.find((x) => x.id === first);
   return m ? m.emoji : "🧭";
+}
+
+function confirmDeleteAction(label) {
+  return window.confirm(`Supprimer ${label} ?`);
+}
+
+function getIncomeImpactFromSource(source) {
+  const normalized = String(source || "").toLowerCase();
+  if (!normalized) return "none";
+  const incomeKeywords = ["salaire", "revenu", "paie", "allocation", "prime", "loyer", "activité", "job", "travail", "rémunération"];
+  const giftKeywords = ["don", "cadeau", "gain", "reçu", "aide", "subvention", "héritage"];
+  if (giftKeywords.some((kw) => normalized.includes(kw))) return "none";
+  if (incomeKeywords.some((kw) => normalized.includes(kw))) return "decrease";
+  return "none";
 }
 
 function loadCache() {
@@ -306,7 +326,7 @@ function App({ session }) {
 
   const addExpense = (expense) => { persist({ ...data, expenses: [...data.expenses, { ...expense, id: uid() }] }); setShowExpenseForm(false); };
   const deleteExpense = (id) => {
-    if (!window.confirm("Supprimer cette dépense ?")) return;
+    if (!confirmDeleteAction("cette dépense")) return;
     persist({ ...data, expenses: data.expenses.filter((e) => e.id !== id) });
   };
   const saveCharge = (charge) => {
@@ -314,20 +334,24 @@ function App({ session }) {
     else persist({ ...data, charges: [...data.charges, { ...charge, id: uid() }] });
     setChargeEditor(null);
   };
-  const deleteCharge = (id) => persist({ ...data, charges: data.charges.filter((c) => c.id !== id) });
+  const deleteCharge = (id) => {
+    if (!confirmDeleteAction("cette charge fixe")) return;
+    persist({ ...data, charges: data.charges.filter((c) => c.id !== id) });
+  };
   const saveGoal = (goal) => {
-    const adjustmentType = goal.incomeAdjustmentType === "decrease" ? "decrease" : "increase";
+    const source = goal.source || "";
+    const incomeImpact = getIncomeImpactFromSource(source);
     const adjustmentAmount = Number(goal.incomeAdjustmentAmount) || 0;
-    const incomeDelta = adjustmentType === "decrease" ? -adjustmentAmount : adjustmentAmount;
+    const incomeDelta = incomeImpact === "decrease" ? -adjustmentAmount : 0;
     const trace = Array.isArray(goal.trace) ? goal.trace : [];
     const newTraceEntry = adjustmentAmount > 0 ? [{
       id: uid(),
       createdAt: new Date().toISOString(),
       type: "income-adjustment",
-      label: adjustmentType === "decrease" ? "Réduction du revenu mensuel" : "Augmentation du revenu mensuel",
+      label: incomeImpact === "decrease" ? "Réduction du revenu mensuel" : "Suivi de l'origine de l'épargne",
       amount: adjustmentAmount,
-      source: goal.source || "Non précisé",
-      direction: adjustmentType,
+      source: source || "Non précisé",
+      direction: incomeImpact === "decrease" ? "decrease" : "none",
     }] : [];
 
     const nextGoals = goal.id
@@ -337,15 +361,15 @@ function App({ session }) {
     const nextData = {
       ...data,
       goals: nextGoals,
-      income: adjustmentAmount > 0 ? Number(data.income || 0) + incomeDelta : Number(data.income || 0),
+      income: Number(data.income || 0) + incomeDelta,
       history: adjustmentAmount > 0 ? [
         ...((data.history || []).slice(0, 9)),
         {
           id: uid(),
           createdAt: new Date().toISOString(),
-          label: `${goal.name || "Objectif"} · ${goal.source || "Origine non précisée"}`,
+          label: `${goal.name || "Objectif"} · ${source || "Origine non précisée"}`,
           amount: adjustmentAmount,
-          direction: adjustmentType,
+          direction: incomeImpact === "decrease" ? "decrease" : "none",
           type: "savings-origin",
         }
       ] : data.history || [],
@@ -355,8 +379,38 @@ function App({ session }) {
     setShowGoalForm(false);
     setGoalEditor(null);
   };
-  const deleteGoal = (id) => persist({ ...data, goals: data.goals.filter((g) => g.id !== id) });
-  const contribute = (id, amount) => persist({ ...data, goals: data.goals.map((g) => (g.id === id ? { ...g, current: Math.max(0, Number(g.current) + amount) } : g)) });
+  const deleteGoal = (id) => {
+    if (!confirmDeleteAction("cet objectif d'épargne")) return;
+    persist({ ...data, goals: data.goals.filter((g) => g.id !== id) });
+  };
+  const contribute = (id, amount, contributionOrigin) => {
+    const impact = contributionOrigin === "income" ? -amount : 0;
+    const traceEntry = {
+      id: uid(),
+      createdAt: new Date().toISOString(),
+      type: "goal-contribution",
+      label: contributionOrigin === "income" ? "Versement depuis le revenu" : "Versement depuis un don / cadeau",
+      amount,
+      source: contributionOrigin === "income" ? "Revenu" : "Autre",
+      direction: contributionOrigin === "income" ? "decrease" : "none",
+    };
+    persist({
+      ...data,
+      income: Number(data.income || 0) + impact,
+      goals: data.goals.map((g) => (g.id === id ? { ...g, current: Math.max(0, Number(g.current) + amount), trace: [...(Array.isArray(g.trace) ? g.trace : []), traceEntry] } : g)),
+      history: [
+        ...((data.history || []).slice(0, 9)),
+        {
+          id: uid(),
+          createdAt: new Date().toISOString(),
+          label: `Versement sur ${data.goals.find((g) => g.id === id)?.name || "l'objectif"}`,
+          amount,
+          direction: contributionOrigin === "income" ? "decrease" : "none",
+          type: "goal-contribution",
+        }
+      ],
+    });
+  };
   const updateIncome = (val) => { persist({ ...data, income: Number(val) || 0 }); setShowIncomeEdit(false); };
   const finishOnboarding = (profile) => persist({ ...data, profile, onboarded: true });
   const saveProfile = (profile) => { persist({ ...data, profile }); setEditProfile(false); };
@@ -786,6 +840,7 @@ function Savings({ goals, onAdd, onDelete, onContribute, onEdit }) {
 
 function GoalCard({ goal, onDelete, onEdit, onContribute }) {
   const [amount, setAmount] = useState("");
+  const [contributionOrigin, setContributionOrigin] = useState("income");
   const pct = Math.min(100, (goal.current / goal.target) * 100 || 0);
   const ticks = 20;
   const filledTicks = Math.round((pct / 100) * ticks);
@@ -829,7 +884,12 @@ function GoalCard({ goal, onDelete, onEdit, onContribute }) {
       <div className="flex gap-2 mt-3">
         <input type="number" inputMode="decimal" placeholder="Montant" value={amount} onChange={(ev) => setAmount(ev.target.value)}
           className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none" style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, color: TEXT }} />
-        <button onClick={() => { const n = Number(amount); if (n > 0) { onContribute(goal.id, n); setAmount(""); } }}
+        <select value={contributionOrigin} onChange={(ev) => setContributionOrigin(ev.target.value)} className="rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, color: TEXT }}>
+          <option value="income">Revenu / salaire</option>
+          <option value="gift">Don / cadeau</option>
+          <option value="other">Autre</option>
+        </select>
+        <button onClick={() => { const n = Number(amount); if (n > 0) { onContribute(goal.id, n, contributionOrigin); setAmount(""); } }}
           className="px-3 py-2 rounded-lg text-sm font-medium shrink-0" style={{ backgroundColor: SAGE, color: "#FFFFFF" }}>Verser</button>
       </div>
     </Card>
@@ -989,23 +1049,14 @@ function GoalForm({ initial, onClose, onSubmit }) {
   const [current, setCurrent] = useState(initial?.current ?? "");
   const [deadline, setDeadline] = useState(initial?.deadline || "");
   const [source, setSource] = useState(initial?.source || "");
-  const [incomeAdjustmentType, setIncomeAdjustmentType] = useState(initial?.incomeAdjustmentType || "none");
-  const [incomeAdjustmentAmount, setIncomeAdjustmentAmount] = useState(initial?.incomeAdjustmentAmount ?? "");
   return (
     <Sheet title={initial ? "Modifier l'objectif" : "Nouvel objectif d'épargne"} onClose={onClose}>
       <Field label="Nom de l'objectif"><input className={inputClass} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : Installation à Valence" /></Field>
       <Field label="Montant cible (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={target} onChange={(e) => setTarget(e.target.value)} placeholder="0" /></Field>
       <Field label="Déjà épargné (optionnel)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="0" /></Field>
       <Field label="Date cible (optionnel)"><input type="date" className={inputClass} style={inputStyle} value={deadline} onChange={(e) => setDeadline(e.target.value)} /></Field>
-      <Field label="Origine de l'épargne"><input className={inputClass} style={inputStyle} value={source} onChange={(e) => setSource(e.target.value)} placeholder="Salaire, bonus, projet…" /></Field>
-      <Field label="Ajuster le revenu mensuel ?">
-        <select className={inputClass} style={inputStyle} value={incomeAdjustmentType} onChange={(e) => setIncomeAdjustmentType(e.target.value)}>
-          <option value="none">Aucun ajustement</option>
-          <option value="increase">Augmenter le revenu mensuel</option>
-          <option value="decrease">Réduire le revenu mensuel</option>
-        </select>
-      </Field>
-      <Field label="Montant de l'ajustement (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={incomeAdjustmentAmount} onChange={(e) => setIncomeAdjustmentAmount(e.target.value)} placeholder="0" /></Field>
+      <Field label="Origine de l'épargne"><input className={inputClass} style={inputStyle} value={source} onChange={(e) => setSource(e.target.value)} placeholder="Salaire, don, bonus, projet…" /></Field>
+      <p className="text-[11px] mb-3" style={{ color: TEXT_MUTED }}>Si l'origine correspond à ton revenu ou à ton salaire, la hausse d'épargne sera prise en compte dans ton revenu mensuel. Si c'est un don ou un cadeau, elle n'affectera pas le revenu.</p>
       <button disabled={!name || !target || Number(target) <= 0} onClick={() => onSubmit({
         id: initial?.id,
         name,
@@ -1013,8 +1064,7 @@ function GoalForm({ initial, onClose, onSubmit }) {
         current: Number(current) || 0,
         deadline,
         source,
-        incomeAdjustmentType,
-        incomeAdjustmentAmount: incomeAdjustmentType === "none" ? 0 : Number(incomeAdjustmentAmount) || 0,
+        incomeAdjustmentAmount: Number(target) || 0,
         trace: initial?.trace || []
       })}
         className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>{initial ? "Enregistrer les changements" : "Créer l'objectif"} →</button>
