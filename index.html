@@ -1,1062 +1,1273 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Mon Budget" />
-<meta name="theme-color" content="#FBF3F2" />
-<link rel="apple-touch-icon" href="data:image/png;base64,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" />
-<link rel="icon" href="data:image/png;base64,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" />
-<link rel="manifest" href="manifest.json" />
-<title>Mon Budget</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; padding: 0; overscroll-behavior-y: none; background: #FBF3F2; }
-  body { font-family: 'IBM Plex Sans', sans-serif; }
-  input, button { font-family: inherit; }
-  ::-webkit-scrollbar { display: none; }
-</style>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script>
-  Babel.registerPreset("react-classic", {
-    presets: [[Babel.availablePresets.react, { runtime: "classic" }]],
-  });
-</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mon Budget" />
+  <meta name="theme-color" content="#FBF3F2" />
+  <link rel="apple-touch-icon"
+    href="data:image/png;base64,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" />
+  <link rel="icon"
+    href="data:image/png;base64,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" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Mon Budget</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      overscroll-behavior-y: none;
+      background: #FBF3F2;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+    }
+
+    input,
+    button {
+      font-family: inherit;
+    }
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    Babel.registerPreset("react-classic", {
+      presets: [[Babel.availablePresets.react, { runtime: "classic" }]],
+    });
+  </script>
 </head>
+
 <body>
-<div id="root"></div>
-<script type="text/babel" data-presets="react-classic">
-const { useState, useEffect, useMemo, useRef } = React;
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react-classic">
+    const { useState, useEffect, useMemo, useRef } = React;
 
-// ====== 1) COLLE TES INFOS SUPABASE ICI (Settings > API dans ton projet) ======
-const SUPABASE_URL = "https://tezdewwkdzbpjeybzggg.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_MXPoSntRqagjLA_DiMN58Q_eZZUAHC2";
-// ================================================================================
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    storage: window.localStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-});
-
-const LOCAL_CACHE_KEY = "mon-budget-cache-v1";
-
-// ---- Design tokens ----
-const BG = "#FBF3F2";
-const SURFACE = "#FFFFFF";
-const SURFACE_ALT = "#FCE9ED";
-const BORDER = "#EAD7DA";
-const TEXT = "#3B2E30";
-const TEXT_MUTED = "#7A686B";
-const ROSE = "#C85678";
-const ROSE_PALE = "#E39FB3";
-const SAGE = "#588A67";
-const GOLD = "#B98A2E";
-const DANGER = "#C1573D";
-
-const CATEGORIES = [
-  { id: "loyer", label: "Loyer", emoji: "🏠", color: GOLD },
-  { id: "abonnements", label: "Abonnements", emoji: "🔁", color: SAGE },
-  { id: "courses", label: "Courses", emoji: "🛒", color: "#CE7A52" },
-  { id: "shopping", label: "Shopping", emoji: "🛍️", color: "#9868A8" },
-  { id: "transport", label: "Transport", emoji: "🚗", color: "#4E7FAE" },
-  { id: "assurance", label: "Assurance", emoji: "🛡️", color: "#3F8F8F" },
-  { id: "telephone", label: "Téléphone / SIM", emoji: "📱", color: ROSE },
-  { id: "sante", label: "Santé", emoji: "💊", color: "#D18242" },
-  { id: "plaisir", label: "Loisirs & plaisir", emoji: "🎉", color: ROSE_PALE },
-  { id: "autres", label: "Autres", emoji: "🗂️", color: "#9C8A8D" },
-];
-const catInfo = (id) => CATEGORIES.find((c) => c.id === id) || CATEGORIES[CATEGORIES.length - 1];
-const uid = () => Math.random().toString(36).slice(2, 10);
-const fmt = (n) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(Number(n) || 0);
-
-const DEFAULT_DATA = { onboarded: false, profile: null, income: 0, charges: [], expenses: [], goals: [], history: [] };
-
-const TIPS = [
-  "Automatise un virement vers ton épargne le jour où tu es payée : ce que tu ne vois pas, tu ne le dépenses pas.",
-  "Passe en revue tes charges fixes une fois par mois — un abonnement oublié coûte cher sur une année.",
-  "Avant un achat plaisir, attends 24h. Si l'envie est toujours là, fais-toi plaisir sans culpabiliser.",
-  "Garde une petite enveloppe « loisirs & plaisir » chaque mois : un budget trop strict craque plus vite.",
-  "Compare le coût réel d'un déménagement (caution, assurance, premier loyer) pour éviter les surprises.",
-  "Note chaque dépense variable le jour même : c'est le geste qui a le plus d'impact sur la maîtrise du budget.",
-  "Un objectif chiffré avec une date te dit exactement combien mettre de côté chaque mois.",
-  "Compare les offres télécom/SIM avant un départ à l'étranger — les forfaits varient beaucoup d'un pays à l'autre.",
-];
-const REFLECTIONS = [
-  "Qu'est-ce qui t'a fait le plus plaisir cette semaine dans tes dépenses ?",
-  "Une de tes charges fixes a-t-elle changé récemment et mérite une mise à jour ?",
-  "Ton objectif d'épargne actuel te semble-t-il toujours réaliste ?",
-  "As-tu dépensé par habitude cette semaine, ou par envie réelle ?",
-  "Qu'est-ce que tu pourrais mettre de côté avant même de le voir sur ton compte ?",
-];
-const MOTIVATIONS = [
-  { id: "projet", label: "Réaliser un projet précis", emoji: "🎯" },
-  { id: "gaspillage", label: "Apprendre à ne pas gaspiller", emoji: "💡" },
-  { id: "epargne", label: "Voir clair dans mon épargne", emoji: "🐷" },
-  { id: "organisation", label: "Mieux organiser mon quotidien", emoji: "📋" },
-];
-const PROJECT_TYPES = [
-  { id: "logement", label: "Logement / installation" },
-  { id: "voiture", label: "Voiture" },
-  { id: "voyage", label: "Voyage" },
-  { id: "etudes", label: "Études / formation" },
-  { id: "autre", label: "Autre projet" },
-];
-const RELATIONSHIPS = [
-  { id: "optimiser", label: "Je gère déjà bien, je veux optimiser" },
-  { id: "sans_suivre", label: "Je dépense sans trop suivre" },
-  { id: "stress", label: "Ça me stresse dès que j'y pense" },
-  { id: "debute", label: "Je débute dans la gestion de mon budget" },
-];
-const FREQUENCIES = [
-  { id: "jour", label: "Tous les jours" },
-  { id: "semaine", label: "Une fois par semaine" },
-  { id: "mois", label: "Une fois par mois" },
-  { id: "sais_pas", label: "Je ne sais pas encore" },
-];
-
-function pickByDay(list) { return list[new Date().getDate() % list.length]; }
-function startOfWeek(d = new Date()) {
-  const date = new Date(d);
-  const day = (date.getDay() + 6) % 7;
-  date.setDate(date.getDate() - day);
-  date.setHours(0, 0, 0, 0);
-  return date;
-}
-function startOfMonth(d = new Date()) { return new Date(d.getFullYear(), d.getMonth(), 1); }
-function inRange(dateStr, from) { if (!dateStr) return false; return new Date(dateStr) >= from; }
-function monthsUntil(dateStr) {
-  if (!dateStr) return null;
-  const target = new Date(dateStr);
-  const now = new Date();
-  let months = (target.getFullYear() - now.getFullYear()) * 12 + (target.getMonth() - now.getMonth());
-  if (target.getDate() < now.getDate()) months -= 1;
-  return Math.max(1, months);
-}
-function objectiveLabel(profile) {
-  if (!profile) return null;
-  const motivations = Array.isArray(profile.motivation) ? profile.motivation : profile.motivation ? [profile.motivation] : [];
-  const projectTypes = Array.isArray(profile.projectType) ? profile.projectType : profile.projectType ? [profile.projectType] : [];
-  const motivationLabels = motivations.map((id) => MOTIVATIONS.find((x) => x.id === id)?.label).filter(Boolean);
-  const projectLabels = projectTypes.map((id) => PROJECT_TYPES.find((p) => p.id === id)?.label).filter(Boolean);
-
-  if (motivations.includes("projet")) {
-    if (projectLabels.length) {
-      return `Construire un budget autour de tes projets : ${projectLabels.join(" · ")}`;
-    }
-    return "Construire un budget autour de tes projets";
-  }
-
-  if (motivationLabels.length > 1) {
-    return `Construire un budget autour de : ${motivationLabels.join(" · ")}`;
-  }
-
-  return motivationLabels[0] || "Construire un budget qui te ressemble";
-}
-function objectiveEmoji(profile) {
-  const motivations = Array.isArray(profile?.motivation) ? profile.motivation : profile?.motivation ? [profile.motivation] : [];
-  const first = motivations[0];
-  const m = MOTIVATIONS.find((x) => x.id === first);
-  return m ? m.emoji : "🧭";
-}
-
-function confirmDeleteAction(label) {
-  return window.confirm(`Supprimer ${label} ?`);
-}
-
-function getIncomeImpactFromSource(source) {
-  const normalized = String(source || "").toLowerCase();
-  if (!normalized) return "none";
-  const incomeKeywords = ["salaire", "revenu", "paie", "allocation", "prime", "loyer", "activité", "job", "travail", "rémunération"];
-  const giftKeywords = ["don", "cadeau", "gain", "reçu", "aide", "subvention", "héritage"];
-  if (giftKeywords.some((kw) => normalized.includes(kw))) return "none";
-  if (incomeKeywords.some((kw) => normalized.includes(kw))) return "decrease";
-  return "none";
-}
-
-function loadCache() {
-  try {
-    const raw = localStorage.getItem(LOCAL_CACHE_KEY);
-    if (raw) return { ...DEFAULT_DATA, ...JSON.parse(raw) };
-  } catch (e) {}
-  return null;
-}
-function saveCache(data) {
-  try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
-}
-
-/* ---------- Auth ---------- */
-
-function Root() {
-  const [session, setSession] = useState(undefined); // undefined = loading, null = logged out
-  useEffect(() => {
-    sb.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: sub } = sb.auth.onAuthStateChange((_event, sess) => setSession(sess));
-    return () => sub.subscription.unsubscribe();
-  }, []);
-
-  if (session === undefined) {
-    return (
-      <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex items-center justify-center">
-        <p className="text-sm opacity-70">Connexion…</p>
-      </div>
-    );
-  }
-  if (!session) return <AuthScreen />;
-  return <App key={session.user.id} session={session} />;
-}
-
-function AuthScreen() {
-  const [mode, setMode] = useState("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const submit = async () => {
-    setError(""); setInfo(""); setLoading(true);
-    try {
-      if (mode === "signup") {
-        const { error } = await sb.auth.signUp({ email, password });
-        if (error) throw error;
-        setInfo("Compte créé. Si une confirmation par email est demandée, vérifie ta boîte mail, puis connecte-toi.");
-        setMode("signin");
-      } else {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+    // ====== 1) COLLE TES INFOS SUPABASE ICI (Settings > API dans ton projet) ======
+    const SUPABASE_URL = "https://tezdewwkdzbpjeybzggg.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_MXPoSntRqagjLA_DiMN58Q_eZZUAHC2";
+    // ================================================================================
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        storage: window.localStorage,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
       }
-    } catch (e) {
-      setError(e.message || "Une erreur est survenue.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
 
-  return (
-    <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex flex-col justify-center px-6">
-      <p className="text-xs tracking-[0.2em] uppercase mb-2 text-center" style={{ color: ROSE }}>Mon budget</p>
-      <h1 style={{ fontFamily: "'Fraunces', serif" }} className="text-3xl text-center mb-8">
-        {mode === "signup" ? "Créer ton compte" : "Content de te revoir"}
-      </h1>
-      <div className="max-w-sm w-full mx-auto">
-        <Field label="Email">
-          <input type="email" className={inputClass} style={inputStyle} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="toi@exemple.com" />
-        </Field>
-        <Field label="Mot de passe">
-          <input type="password" className={inputClass} style={inputStyle} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
-        </Field>
-        {error && <p className="text-xs mb-3" style={{ color: DANGER }}>{error}</p>}
-        {info && <p className="text-xs mb-3" style={{ color: SAGE }}>{info}</p>}
-        <button disabled={loading || !email || !password} onClick={submit}
-          className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40 mb-3" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>
-          {loading ? "…" : mode === "signup" ? "Créer mon compte" : "Se connecter"}
-        </button>
-        <button onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); setInfo(""); }}
-          className="w-full text-center text-xs" style={{ color: TEXT_MUTED }}>
-          {mode === "signup" ? "J'ai déjà un compte" : "Pas encore de compte ? En créer un"}
-        </button>
-      </div>
-    </div>
-  );
-}
+    const LOCAL_CACHE_KEY = "mon-budget-cache-v1";
 
-/* ---------- Main app ---------- */
+    // ---- Design tokens ----
+    const BG = "#FBF3F2";
+    const SURFACE = "#FFFFFF";
+    const SURFACE_ALT = "#FCE9ED";
+    const BORDER = "#EAD7DA";
+    const TEXT = "#3B2E30";
+    const TEXT_MUTED = "#7A686B";
+    const ROSE = "#C85678";
+    const ROSE_PALE = "#E39FB3";
+    const SAGE = "#588A67";
+    const GOLD = "#B98A2E";
+    const DANGER = "#C1573D";
 
-function App({ session }) {
-  const [data, setData] = useState(() => loadCache() || DEFAULT_DATA);
-  const [dataReady, setDataReady] = useState(false);
-  const [tab, setTab] = useState("dashboard");
-  const [period, setPeriod] = useState("mois");
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [showGoalForm, setShowGoalForm] = useState(false);
-  const [goalEditor, setGoalEditor] = useState(null);
-  const [showIncomeEdit, setShowIncomeEdit] = useState(false);
-  const [chargeEditor, setChargeEditor] = useState(null);
-  const [editProfile, setEditProfile] = useState(false);
-  const [error, setError] = useState("");
-  const fileInputRef = useRef(null);
+    const CATEGORIES = [
+      { id: "loyer", label: "Loyer", emoji: "🏠", color: GOLD },
+      { id: "abonnements", label: "Abonnements", emoji: "🔁", color: SAGE },
+      { id: "courses", label: "Courses", emoji: "🛒", color: "#CE7A52" },
+      { id: "shopping", label: "Shopping", emoji: "🛍️", color: "#9868A8" },
+      { id: "transport", label: "Transport", emoji: "🚗", color: "#4E7FAE" },
+      { id: "assurance", label: "Assurance", emoji: "🛡️", color: "#3F8F8F" },
+      { id: "telephone", label: "Téléphone / SIM", emoji: "📱", color: ROSE },
+      { id: "sante", label: "Santé", emoji: "💊", color: "#D18242" },
+      { id: "plaisir", label: "Loisirs & plaisir", emoji: "🎉", color: ROSE_PALE },
+      { id: "autres", label: "Autres", emoji: "🗂️", color: "#9C8A8D" },
+    ];
+    const INCOME_TYPES = [
+      { id: "salaire", label: "Salaire", emoji: "💼" },
+      { id: "bourse", label: "Bourse", emoji: "🎓" },
+      { id: "aide_familiale", label: "Aide familiale", emoji: "🏡" },
+      { id: "projet", label: "Revenu d’un projet", emoji: "🚀" },
+      { id: "occasionnel", label: "Revenu occasionnel", emoji: "✨" },
+    ];
+    const catInfo = (id) => CATEGORIES.find((c) => c.id === id) || CATEGORIES[CATEGORIES.length - 1];
+    const uid = () => Math.random().toString(36).slice(2, 10);
+    const fmt = (n) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(Number(n) || 0);
 
-  useEffect(() => {
-    (async () => {
-      const { data: row, error } = await sb.from("budget_data").select("data").eq("user_id", session.user.id).maybeSingle();
-      if (!error && row && row.data) {
-        setData({ ...DEFAULT_DATA, ...row.data });
-        saveCache(row.data);
+    function getIncomeSources(data) {
+      const stored = Array.isArray(data?.incomeSources) ? data.incomeSources : [];
+      if (stored.length > 0) {
+        return stored
+          .filter((source) => source && (Number(source.amount || 0) > 0 || String(source.label || "").trim()))
+          .map((source) => ({ ...source, amount: Number(source.amount || 0) }));
       }
-      setDataReady(true);
-    })();
-  }, [session.user.id]);
+      const fallbackIncome = Number(data?.income || 0);
+      if (fallbackIncome > 0) {
+        return [{ id: uid(), type: "salaire", label: "Revenu mensuel", amount: fallbackIncome }];
+      }
+      return [];
+    }
 
-  const persist = async (next) => {
-    setData(next);
-    saveCache(next);
-    const { error } = await sb.from("budget_data").upsert({ user_id: session.user.id, data: next, updated_at: new Date().toISOString() });
-    setError(error ? "Sauvegardé sur cet appareil, mais pas encore synchronisé (vérifie ta connexion)." : "");
-  };
+    function getMonthlyIncome(data) {
+      const sources = getIncomeSources(data);
+      if (sources.length > 0) {
+        return sources.reduce((sum, source) => sum + Number(source.amount || 0), 0);
+      }
+      return Number(data?.income || 0);
+    }
 
-  const logout = () => sb.auth.signOut();
+    function getPlannedSavings(data) {
+      const goals = Array.isArray(data?.goals) ? data.goals : [];
+      return goals.reduce((sum, goal) => {
+        if (!goal?.deadline || !goal?.target || Number(goal.target) <= 0) return sum;
+        const months = monthsUntil(goal.deadline);
+        if (!months || months <= 0) return sum;
+        const remaining = Math.max(0, Number(goal.target || 0) - Number(goal.current || 0));
+        return sum + remaining / months;
+      }, 0);
+    }
 
-  const totalCharges = useMemo(() => data.charges.reduce((s, c) => s + Number(c.amount || 0), 0), [data.charges]);
-  const variableMonthExpenses = useMemo(() => data.expenses.filter((e) => inRange(e.date, startOfMonth())), [data.expenses]);
-  const variableMonthTotal = useMemo(() => variableMonthExpenses.reduce((s, e) => s + Number(e.amount || 0), 0), [variableMonthExpenses]);
-  const variablePeriodExpenses = useMemo(() => {
-    const from = period === "semaine" ? startOfWeek() : startOfMonth();
-    return data.expenses.filter((e) => inRange(e.date, from));
-  }, [data.expenses, period]);
-  const variablePeriodTotal = useMemo(() => variablePeriodExpenses.reduce((s, e) => s + Number(e.amount || 0), 0), [variablePeriodExpenses]);
-  const remaining = data.income - totalCharges - variableMonthTotal;
-  const byCategoryChart = useMemo(() => {
-    const map = {};
-    CATEGORIES.forEach((c) => (map[c.id] = 0));
-    if (period === "mois") data.charges.forEach((c) => (map[c.category] = (map[c.category] || 0) + Number(c.amount || 0)));
-    variablePeriodExpenses.forEach((e) => (map[e.category] = (map[e.category] || 0) + Number(e.amount || 0)));
-    return map;
-  }, [data.charges, variablePeriodExpenses, period]);
+    function getNextMajorExpense(data) {
+      const charges = Array.isArray(data?.charges) ? data.charges : [];
+      if (charges.length > 0) {
+        const sorted = [...charges].sort((a, b) => Number(b.amount || 0) - Number(a.amount || 0));
+        return sorted[0] ? { ...sorted[0], kind: "charge" } : null;
+      }
+      const monthExpenses = (Array.isArray(data?.expenses) ? data.expenses : []).filter((expense) => inRange(expense.date, startOfMonth()));
+      if (monthExpenses.length > 0) {
+        const sorted = [...monthExpenses].sort((a, b) => Number(b.amount || 0) - Number(a.amount || 0));
+        return sorted[0] ? { ...sorted[0], kind: "expense" } : null;
+      }
+      return null;
+    }
 
-  const addExpense = (expense) => { persist({ ...data, expenses: [...data.expenses, { ...expense, id: uid() }] }); setShowExpenseForm(false); };
-  const deleteExpense = (id) => {
-    if (!confirmDeleteAction("cette dépense")) return;
-    persist({ ...data, expenses: data.expenses.filter((e) => e.id !== id) });
-  };
-  const saveCharge = (charge) => {
-    if (charge.id) persist({ ...data, charges: data.charges.map((c) => (c.id === charge.id ? charge : c)) });
-    else persist({ ...data, charges: [...data.charges, { ...charge, id: uid() }] });
-    setChargeEditor(null);
-  };
-  const deleteCharge = (id) => {
-    if (!confirmDeleteAction("cette charge fixe")) return;
-    persist({ ...data, charges: data.charges.filter((c) => c.id !== id) });
-  };
-  const saveGoal = (goal) => {
-    const trace = Array.isArray(goal.trace) ? goal.trace : [];
-    const nextGoals = goal.id
-      ? data.goals.map((g) => (g.id === goal.id ? { ...g, ...goal, current: Number(goal.current) || 0, trace } : g))
-      : [...data.goals, { ...goal, id: uid(), current: Number(goal.current) || 0, trace }];
+    function getDailyBudget(remaining) {
+      const today = new Date();
+      const daysLeft = Math.max(1, new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() - today.getDate() + 1);
+      return remaining / daysLeft;
+    }
 
-    persist({ ...data, goals: nextGoals });
-    setShowGoalForm(false);
-    setGoalEditor(null);
-  };
-  const deleteGoal = (id) => {
-    if (!confirmDeleteAction("cet objectif d'épargne")) return;
-    persist({ ...data, goals: data.goals.filter((g) => g.id !== id) });
-  };
-  const contribute = (id, amount, contributionOrigin) => {
-    const impact = contributionOrigin === "income" ? -amount : 0;
-    const traceEntry = {
-      id: uid(),
-      createdAt: new Date().toISOString(),
-      type: "goal-contribution",
-      label: contributionOrigin === "income" ? "Versement depuis le revenu" : "Versement depuis un don / cadeau",
-      amount,
-      source: contributionOrigin === "income" ? "Revenu" : "Autre",
-      direction: contributionOrigin === "income" ? "decrease" : "none",
-    };
-    persist({
-      ...data,
-      income: Number(data.income || 0) + impact,
-      goals: data.goals.map((g) => (g.id === id ? { ...g, current: Math.max(0, Number(g.current) + amount), trace: [...(Array.isArray(g.trace) ? g.trace : []), traceEntry] } : g)),
-      history: [
-        ...((data.history || []).slice(0, 9)),
-        {
+    function getPersonalAdvice({ profile, remaining, monthlyIncome, plannedSavings, nextMajorExpense }) {
+      const name = profile?.name?.trim() || "toi";
+      if (remaining < 0) {
+        return `${name}, ton budget du mois est déjà tendu. Priorise les charges fixes et reporte les achats non essentiels.`;
+      }
+      if (remaining < monthlyIncome * 0.2) {
+        return `${name}, tu as peu de marge aujourd'hui. Un petit check rapide sur les dépenses variables peut te sauver d'une surprise.`;
+      }
+      if (plannedSavings > 0 && remaining >= plannedSavings) {
+        return `${name}, tu as encore de la marge pour renforcer ton épargne sans casser ton équilibre du mois.`;
+      }
+      if (nextMajorExpense) {
+        return `${name}, la prochaine grosse sortie est ${nextMajorExpense.name || catInfo(nextMajorExpense.category)?.label || "une dépense importante"}. Prévois-la dès maintenant.`;
+      }
+      return `${name}, un budget clair commence par une petite décision aujourd'hui : consigne une dépense, puis laisse l'app te guider.`;
+    }
+
+    const DEFAULT_DATA = { onboarded: false, profile: null, income: 0, incomeSources: [], charges: [], expenses: [], goals: [], history: [] };
+
+    const TIPS = [
+      "Automatise un virement vers ton épargne le jour où tu es payée : ce que tu ne vois pas, tu ne le dépenses pas.",
+      "Passe en revue tes charges fixes une fois par mois — un abonnement oublié coûte cher sur une année.",
+      "Avant un achat plaisir, attends 24h. Si l'envie est toujours là, fais-toi plaisir sans culpabiliser.",
+      "Garde une petite enveloppe « loisirs & plaisir » chaque mois : un budget trop strict craque plus vite.",
+      "Compare le coût réel d'un déménagement (caution, assurance, premier loyer) pour éviter les surprises.",
+      "Note chaque dépense variable le jour même : c'est le geste qui a le plus d'impact sur la maîtrise du budget.",
+      "Un objectif chiffré avec une date te dit exactement combien mettre de côté chaque mois.",
+      "Compare les offres télécom/SIM avant un départ à l'étranger — les forfaits varient beaucoup d'un pays à l'autre.",
+    ];
+    const REFLECTIONS = [
+      "Qu'est-ce qui t'a fait le plus plaisir cette semaine dans tes dépenses ?",
+      "Une de tes charges fixes a-t-elle changé récemment et mérite une mise à jour ?",
+      "Ton objectif d'épargne actuel te semble-t-il toujours réaliste ?",
+      "As-tu dépensé par habitude cette semaine, ou par envie réelle ?",
+      "Qu'est-ce que tu pourrais mettre de côté avant même de le voir sur ton compte ?",
+    ];
+    const MOTIVATIONS = [
+      { id: "projet", label: "Réaliser un projet précis", emoji: "🎯" },
+      { id: "gaspillage", label: "Apprendre à ne pas gaspiller", emoji: "💡" },
+      { id: "epargne", label: "Voir clair dans mon épargne", emoji: "🐷" },
+      { id: "organisation", label: "Mieux organiser mon quotidien", emoji: "📋" },
+    ];
+    const PROJECT_TYPES = [
+      { id: "logement", label: "Logement / installation" },
+      { id: "voiture", label: "Voiture" },
+      { id: "voyage", label: "Voyage" },
+      { id: "etudes", label: "Études / formation" },
+      { id: "autre", label: "Autre projet" },
+    ];
+    const RELATIONSHIPS = [
+      { id: "optimiser", label: "Je gère déjà bien, je veux optimiser" },
+      { id: "sans_suivre", label: "Je dépense sans trop suivre" },
+      { id: "stress", label: "Ça me stresse dès que j'y pense" },
+      { id: "debute", label: "Je débute dans la gestion de mon budget" },
+    ];
+    const FREQUENCIES = [
+      { id: "jour", label: "Tous les jours" },
+      { id: "semaine", label: "Une fois par semaine" },
+      { id: "mois", label: "Une fois par mois" },
+      { id: "sais_pas", label: "Je ne sais pas encore" },
+    ];
+
+    function pickByDay(list) { return list[new Date().getDate() % list.length]; }
+    function startOfWeek(d = new Date()) {
+      const date = new Date(d);
+      const day = (date.getDay() + 6) % 7;
+      date.setDate(date.getDate() - day);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+    function startOfMonth(d = new Date()) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+    function inRange(dateStr, from) { if (!dateStr) return false; return new Date(dateStr) >= from; }
+    function monthsUntil(dateStr) {
+      if (!dateStr) return null;
+      const target = new Date(dateStr);
+      const now = new Date();
+      let months = (target.getFullYear() - now.getFullYear()) * 12 + (target.getMonth() - now.getMonth());
+      if (target.getDate() < now.getDate()) months -= 1;
+      return Math.max(1, months);
+    }
+    function objectiveLabel(profile) {
+      if (!profile) return null;
+      const motivations = Array.isArray(profile.motivation) ? profile.motivation : profile.motivation ? [profile.motivation] : [];
+      const projectTypes = Array.isArray(profile.projectType) ? profile.projectType : profile.projectType ? [profile.projectType] : [];
+      const motivationLabels = motivations.map((id) => MOTIVATIONS.find((x) => x.id === id)?.label).filter(Boolean);
+      const projectLabels = projectTypes.map((id) => PROJECT_TYPES.find((p) => p.id === id)?.label).filter(Boolean);
+
+      if (motivations.includes("projet")) {
+        if (projectLabels.length) {
+          return `Construire un budget autour de tes projets : ${projectLabels.join(" · ")}`;
+        }
+        return "Construire un budget autour de tes projets";
+      }
+
+      if (motivationLabels.length > 1) {
+        return `Construire un budget autour de : ${motivationLabels.join(" · ")}`;
+      }
+
+      return motivationLabels[0] || "Construire un budget qui te ressemble";
+    }
+    function objectiveEmoji(profile) {
+      const motivations = Array.isArray(profile?.motivation) ? profile.motivation : profile?.motivation ? [profile.motivation] : [];
+      const first = motivations[0];
+      const m = MOTIVATIONS.find((x) => x.id === first);
+      return m ? m.emoji : "🧭";
+    }
+
+    function confirmDeleteAction(label) {
+      return window.confirm(`Supprimer ${label} ?`);
+    }
+
+    function getIncomeImpactFromSource(source) {
+      const normalized = String(source || "").toLowerCase();
+      if (!normalized) return "none";
+      const incomeKeywords = ["salaire", "revenu", "paie", "allocation", "prime", "loyer", "activité", "job", "travail", "rémunération"];
+      const giftKeywords = ["don", "cadeau", "gain", "reçu", "aide", "subvention", "héritage"];
+      if (giftKeywords.some((kw) => normalized.includes(kw))) return "none";
+      if (incomeKeywords.some((kw) => normalized.includes(kw))) return "decrease";
+      return "none";
+    }
+
+    function loadCache() {
+      try {
+        const raw = localStorage.getItem(LOCAL_CACHE_KEY);
+        if (raw) return { ...DEFAULT_DATA, ...JSON.parse(raw) };
+      } catch (e) { }
+      return null;
+    }
+    function saveCache(data) {
+      try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data)); } catch (e) { }
+    }
+
+    /* ---------- Auth ---------- */
+
+    function Root() {
+      const [session, setSession] = useState(undefined); // undefined = loading, null = logged out
+      useEffect(() => {
+        sb.auth.getSession().then(({ data }) => setSession(data.session));
+        const { data: sub } = sb.auth.onAuthStateChange((_event, sess) => setSession(sess));
+        return () => sub.subscription.unsubscribe();
+      }, []);
+
+      if (session === undefined) {
+        return (
+          <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex items-center justify-center">
+            <p className="text-sm opacity-70">Connexion…</p>
+          </div>
+        );
+      }
+      if (!session) return <AuthScreen />;
+      return <App key={session.user.id} session={session} />;
+    }
+
+    function AuthScreen() {
+      const [mode, setMode] = useState("signin");
+      const [email, setEmail] = useState("");
+      const [password, setPassword] = useState("");
+      const [error, setError] = useState("");
+      const [info, setInfo] = useState("");
+      const [loading, setLoading] = useState(false);
+
+      const submit = async () => {
+        setError(""); setInfo(""); setLoading(true);
+        try {
+          if (mode === "signup") {
+            const { error } = await sb.auth.signUp({ email, password });
+            if (error) throw error;
+            setInfo("Compte créé. Si une confirmation par email est demandée, vérifie ta boîte mail, puis connecte-toi.");
+            setMode("signin");
+          } else {
+            const { error } = await sb.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+          }
+        } catch (e) {
+          setError(e.message || "Une erreur est survenue.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex flex-col justify-center px-6">
+          <p className="text-xs tracking-[0.2em] uppercase mb-2 text-center" style={{ color: ROSE }}>Mon budget</p>
+          <h1 style={{ fontFamily: "'Fraunces', serif" }} className="text-3xl text-center mb-8">
+            {mode === "signup" ? "Créer ton compte" : "Content de te revoir"}
+          </h1>
+          <div className="max-w-sm w-full mx-auto">
+            <Field label="Email">
+              <input type="email" className={inputClass} style={inputStyle} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="toi@exemple.com" />
+            </Field>
+            <Field label="Mot de passe">
+              <input type="password" className={inputClass} style={inputStyle} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            </Field>
+            {error && <p className="text-xs mb-3" style={{ color: DANGER }}>{error}</p>}
+            {info && <p className="text-xs mb-3" style={{ color: SAGE }}>{info}</p>}
+            <button disabled={loading || !email || !password} onClick={submit}
+              className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40 mb-3" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>
+              {loading ? "…" : mode === "signup" ? "Créer mon compte" : "Se connecter"}
+            </button>
+            <button onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); setInfo(""); }}
+              className="w-full text-center text-xs" style={{ color: TEXT_MUTED }}>
+              {mode === "signup" ? "J'ai déjà un compte" : "Pas encore de compte ? En créer un"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    /* ---------- Main app ---------- */
+
+    function App({ session }) {
+      const [data, setData] = useState(() => loadCache() || DEFAULT_DATA);
+      const [dataReady, setDataReady] = useState(false);
+      const [tab, setTab] = useState("dashboard");
+      const [period, setPeriod] = useState("mois");
+      const [showExpenseForm, setShowExpenseForm] = useState(false);
+      const [showGoalForm, setShowGoalForm] = useState(false);
+      const [goalEditor, setGoalEditor] = useState(null);
+      const [showIncomeEdit, setShowIncomeEdit] = useState(false);
+      const [chargeEditor, setChargeEditor] = useState(null);
+      const [editProfile, setEditProfile] = useState(false);
+      const [error, setError] = useState("");
+      const fileInputRef = useRef(null);
+
+      useEffect(() => {
+        (async () => {
+          const { data: row, error } = await sb.from("budget_data").select("data").eq("user_id", session.user.id).maybeSingle();
+          if (!error && row && row.data) {
+            setData({ ...DEFAULT_DATA, ...row.data });
+            saveCache(row.data);
+          }
+          setDataReady(true);
+        })();
+      }, [session.user.id]);
+
+      const persist = async (next) => {
+        setData(next);
+        saveCache(next);
+        const { error } = await sb.from("budget_data").upsert({ user_id: session.user.id, data: next, updated_at: new Date().toISOString() });
+        setError(error ? "Sauvegardé sur cet appareil, mais pas encore synchronisé (vérifie ta connexion)." : "");
+      };
+
+      const logout = () => sb.auth.signOut();
+
+      const totalCharges = useMemo(() => data.charges.reduce((s, c) => s + Number(c.amount || 0), 0), [data.charges]);
+      const variableMonthExpenses = useMemo(() => data.expenses.filter((e) => inRange(e.date, startOfMonth())), [data.expenses]);
+      const variableMonthTotal = useMemo(() => variableMonthExpenses.reduce((s, e) => s + Number(e.amount || 0), 0), [variableMonthExpenses]);
+      const variablePeriodExpenses = useMemo(() => {
+        const from = period === "semaine" ? startOfWeek() : startOfMonth();
+        return data.expenses.filter((e) => inRange(e.date, from));
+      }, [data.expenses, period]);
+      const variablePeriodTotal = useMemo(() => variablePeriodExpenses.reduce((s, e) => s + Number(e.amount || 0), 0), [variablePeriodExpenses]);
+      const monthlyIncome = useMemo(() => getMonthlyIncome(data), [data]);
+      const incomeSources = useMemo(() => getIncomeSources(data), [data]);
+      const remaining = monthlyIncome - totalCharges - variableMonthTotal;
+      const dailyBudget = useMemo(() => getDailyBudget(remaining), [remaining]);
+      const plannedSavings = useMemo(() => getPlannedSavings(data), [data.goals]);
+      const nextMajorExpense = useMemo(() => getNextMajorExpense(data), [data.charges, data.expenses]);
+      const personalAdvice = useMemo(() => getPersonalAdvice({ profile: data.profile, remaining, monthlyIncome, plannedSavings, nextMajorExpense }), [data.profile, remaining, monthlyIncome, plannedSavings, nextMajorExpense]);
+      const byCategoryChart = useMemo(() => {
+        const map = {};
+        CATEGORIES.forEach((c) => (map[c.id] = 0));
+        if (period === "mois") data.charges.forEach((c) => (map[c.category] = (map[c.category] || 0) + Number(c.amount || 0)));
+        variablePeriodExpenses.forEach((e) => (map[e.category] = (map[e.category] || 0) + Number(e.amount || 0)));
+        return map;
+      }, [data.charges, variablePeriodExpenses, period]);
+
+      const addExpense = (expense) => { persist({ ...data, expenses: [...data.expenses, { ...expense, id: uid() }] }); setShowExpenseForm(false); };
+      const deleteExpense = (id) => {
+        if (!confirmDeleteAction("cette dépense")) return;
+        persist({ ...data, expenses: data.expenses.filter((e) => e.id !== id) });
+      };
+      const saveCharge = (charge) => {
+        if (charge.id) persist({ ...data, charges: data.charges.map((c) => (c.id === charge.id ? charge : c)) });
+        else persist({ ...data, charges: [...data.charges, { ...charge, id: uid() }] });
+        setChargeEditor(null);
+      };
+      const deleteCharge = (id) => {
+        if (!confirmDeleteAction("cette charge fixe")) return;
+        persist({ ...data, charges: data.charges.filter((c) => c.id !== id) });
+      };
+      const saveGoal = (goal) => {
+        const trace = Array.isArray(goal.trace) ? goal.trace : [];
+        const nextGoals = goal.id
+          ? data.goals.map((g) => (g.id === goal.id ? { ...g, ...goal, current: Number(goal.current) || 0, trace } : g))
+          : [...data.goals, { ...goal, id: uid(), current: Number(goal.current) || 0, trace }];
+
+        persist({ ...data, goals: nextGoals });
+        setShowGoalForm(false);
+        setGoalEditor(null);
+      };
+      const deleteGoal = (id) => {
+        if (!confirmDeleteAction("cet objectif d'épargne")) return;
+        persist({ ...data, goals: data.goals.filter((g) => g.id !== id) });
+      };
+      const contribute = (id, amount, contributionOrigin) => {
+        const impact = contributionOrigin === "income" ? -amount : 0;
+        const traceEntry = {
           id: uid(),
           createdAt: new Date().toISOString(),
-          label: `Versement sur ${data.goals.find((g) => g.id === id)?.name || "l'objectif"}`,
-          amount,
-          direction: contributionOrigin === "income" ? "decrease" : "none",
           type: "goal-contribution",
-        }
-      ],
-    });
-  };
-  const updateIncome = (val) => { persist({ ...data, income: Number(val) || 0 }); setShowIncomeEdit(false); };
-  const finishOnboarding = (profile) => persist({ ...data, profile, onboarded: true });
-  const saveProfile = (profile) => { persist({ ...data, profile }); setEditProfile(false); };
+          label: contributionOrigin === "income" ? "Versement depuis le revenu" : "Versement depuis un don / cadeau",
+          amount,
+          source: contributionOrigin === "income" ? "Revenu" : "Autre",
+          direction: contributionOrigin === "income" ? "decrease" : "none",
+        };
+        persist({
+          ...data,
+          income: Number(data.income || 0) + impact,
+          goals: data.goals.map((g) => (g.id === id ? { ...g, current: Math.max(0, Number(g.current) + amount), trace: [...(Array.isArray(g.trace) ? g.trace : []), traceEntry] } : g)),
+          history: [
+            ...((data.history || []).slice(0, 9)),
+            {
+              id: uid(),
+              createdAt: new Date().toISOString(),
+              label: `Versement sur ${data.goals.find((g) => g.id === id)?.name || "l'objectif"}`,
+              amount,
+              direction: contributionOrigin === "income" ? "decrease" : "none",
+              type: "goal-contribution",
+            }
+          ],
+        });
+      };
+      const updateIncome = (payload) => {
+        const nextIncome = Number(payload?.total ?? payload ?? data.income) || 0;
+        const nextSources = Array.isArray(payload?.sources)
+          ? payload.sources.map((source) => ({ ...source, amount: Number(source.amount || 0) }))
+          : getIncomeSources({ ...data, income: nextIncome });
+        persist({ ...data, income: nextIncome, incomeSources: nextSources });
+        setShowIncomeEdit(false);
+      };
+      const finishOnboarding = (profile) => persist({ ...data, profile, onboarded: true });
+      const saveProfile = (profile) => { persist({ ...data, profile }); setEditProfile(false); };
 
-  const exportData = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `mon-budget-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-  const triggerImport = () => fileInputRef.current && fileInputRef.current.click();
-  const handleImportFile = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const parsed = JSON.parse(ev.target.result);
-        if (window.confirm("Remplacer toutes tes données actuelles par cette sauvegarde ?")) persist({ ...DEFAULT_DATA, ...parsed });
-      } catch (err) {
-        setError("Ce fichier n'est pas une sauvegarde valide.");
+      const exportData = () => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `mon-budget-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+      const triggerImport = () => fileInputRef.current && fileInputRef.current.click();
+      const handleImportFile = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const parsed = JSON.parse(ev.target.result);
+            if (window.confirm("Remplacer toutes tes données actuelles par cette sauvegarde ?")) persist({ ...DEFAULT_DATA, ...parsed });
+          } catch (err) {
+            setError("Ce fichier n'est pas une sauvegarde valide.");
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = "";
+      };
+
+      if (!dataReady) {
+        return (
+          <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex items-center justify-center">
+            <p className="text-sm opacity-70">Chargement de tes données…</p>
+          </div>
+        );
       }
-    };
-    reader.readAsText(file);
-    e.target.value = "";
-  };
 
-  if (!dataReady) {
-    return (
-      <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex items-center justify-center">
-        <p className="text-sm opacity-70">Chargement de tes données…</p>
-      </div>
-    );
-  }
+      if (!data.onboarded) return <Onboarding onComplete={finishOnboarding} />;
 
-  if (!data.onboarded) return <Onboarding onComplete={finishOnboarding} />;
+      const monthLabel = new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+      const now = new Date();
+      const greeting = now.getHours() < 18 ? "Bonjour" : "Bonsoir";
+      const displayName = data.profile?.name?.trim() || "toi";
 
-  const monthLabel = new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
-  const now = new Date();
-  const greeting = now.getHours() < 18 ? "Bonjour" : "Bonsoir";
-  const displayName = data.profile?.name?.trim() || "toi";
+      return (
+        <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", backgroundColor: BG, color: TEXT, minHeight: "100vh", paddingBottom: "calc(84px + env(safe-area-inset-bottom))" }}>
+          {editProfile && (
+            <div style={{ position: "fixed", inset: 0, zIndex: 50, backgroundColor: BG }}>
+              <Onboarding initial={data.profile} onComplete={saveProfile} onClose={() => setEditProfile(false)} />
+            </div>
+          )}
 
-  return (
-    <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", backgroundColor: BG, color: TEXT, minHeight: "100vh", paddingBottom: "calc(84px + env(safe-area-inset-bottom))" }}>
-      {editProfile && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 50, backgroundColor: BG }}>
-          <Onboarding initial={data.profile} onComplete={saveProfile} onClose={() => setEditProfile(false)} />
+          <header className="px-5 pb-5" style={{ borderBottom: `1px solid ${BORDER}`, paddingTop: "calc(2rem + env(safe-area-inset-top))" }}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs tracking-[0.2em] uppercase" style={{ color: ROSE }}>{greeting} {displayName}</p>
+                <h1 style={{ fontFamily: "'Fraunces', serif" }} className="text-3xl mt-1 font-semibold">Mon budget</h1>
+                <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: TEXT_MUTED }} className="text-[11px] mt-1 capitalize">{monthLabel}</p>
+              </div>
+              <button onClick={logout} className="text-[10px] mt-1 underline shrink-0" style={{ color: TEXT_MUTED }}>Déconnexion</button>
+            </div>
+          </header>
+
+          {error && (
+            <div className="mx-5 mt-4 text-xs px-3 py-2 rounded" style={{ backgroundColor: DANGER + "1A", border: `1px solid ${DANGER}`, color: TEXT }}>{error}</div>
+          )}
+
+          <main className="px-5 mt-6">
+            {tab === "dashboard" && (
+              <Dashboard data={data} totalCharges={totalCharges} variableMonthTotal={variableMonthTotal} remaining={remaining}
+                byCategoryChart={byCategoryChart} period={period} setPeriod={setPeriod}
+                onEditIncome={() => setShowIncomeEdit(true)} onGoToCharges={() => setTab("charges")} onEditProfile={() => setEditProfile(true)}
+                monthlyIncome={monthlyIncome} incomeSources={incomeSources} dailyBudget={dailyBudget} plannedSavings={plannedSavings}
+                nextMajorExpense={nextMajorExpense} personalAdvice={personalAdvice} />
+            )}
+            {tab === "charges" && (
+              <Charges charges={data.charges} totalCharges={totalCharges} onAdd={() => setChargeEditor(true)} onEdit={(c) => setChargeEditor(c)} onDelete={deleteCharge} />
+            )}
+            {tab === "depenses" && (
+              <Expenses period={period} setPeriod={setPeriod} periodExpenses={variablePeriodExpenses} periodTotal={variablePeriodTotal} onDelete={deleteExpense} onAdd={() => setShowExpenseForm(true)} />
+            )}
+            {tab === "epargne" && <Savings goals={data.goals} onAdd={() => setShowGoalForm(true)} onDelete={deleteGoal} onEdit={(goal) => setGoalEditor(goal)} onContribute={contribute} />}
+            {tab === "parcours" && (
+              <Parcours data={data} onEditProfile={() => setEditProfile(true)} onExport={exportData} onImport={triggerImport} />
+            )}
+          </main>
+          <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={handleImportFile} />
+
+          <nav style={{ position: "fixed", left: 0, right: 0, bottom: 0, backgroundColor: SURFACE, borderTop: `1px solid ${BORDER}`, paddingBottom: "env(safe-area-inset-bottom)" }} className="flex">
+            <TabButton active={tab === "dashboard"} onClick={() => setTab("dashboard")} emoji="📊" label="Aperçu" />
+            <TabButton active={tab === "charges"} onClick={() => setTab("charges")} emoji="📋" label="Charges" />
+            <TabButton active={tab === "depenses"} onClick={() => setTab("depenses")} emoji="🧾" label="Dépenses" />
+            <TabButton active={tab === "epargne"} onClick={() => setTab("epargne")} emoji="🐷" label="Épargne" />
+            <TabButton active={tab === "parcours"} onClick={() => setTab("parcours")} emoji="🗺️" label="Parcours" />
+          </nav>
+
+          {showExpenseForm && <ExpenseForm onClose={() => setShowExpenseForm(false)} onSubmit={addExpense} />}
+          {chargeEditor && <ChargeForm initial={typeof chargeEditor === "object" ? chargeEditor : null} onClose={() => setChargeEditor(null)} onSubmit={saveCharge} />}
+          {showGoalForm && <GoalForm onClose={() => setShowGoalForm(false)} onSubmit={saveGoal} />}
+          {goalEditor && <GoalForm initial={goalEditor} onClose={() => setGoalEditor(null)} onSubmit={saveGoal} />}
+          {showIncomeEdit && <IncomeForm initial={data.income} initialSources={incomeSources} onClose={() => setShowIncomeEdit(false)} onSubmit={updateIncome} />}
         </div>
-      )}
+      );
+    }
 
-      <header className="px-5 pb-5" style={{ borderBottom: `1px solid ${BORDER}`, paddingTop: "calc(2rem + env(safe-area-inset-top))" }}>
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs tracking-[0.2em] uppercase" style={{ color: ROSE }}>{greeting} {displayName}</p>
-            <h1 style={{ fontFamily: "'Fraunces', serif" }} className="text-3xl mt-1 font-semibold">Mon budget</h1>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: TEXT_MUTED }} className="text-[11px] mt-1 capitalize">{monthLabel}</p>
+    function OptionCard({ selected, onClick, label, emoji }) {
+      return (
+        <button onClick={onClick} className="w-full flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-colors"
+          style={{ borderColor: selected ? ROSE : BORDER, backgroundColor: selected ? ROSE + "14" : SURFACE }}>
+          {emoji && <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: (selected ? ROSE : TEXT_MUTED) + "20", fontSize: 16 }}>{emoji}</div>}
+          <span className="text-sm flex-1">{label}</span>
+          <div className="w-4 h-4 rounded-full border shrink-0" style={{ borderColor: selected ? ROSE : BORDER, backgroundColor: selected ? ROSE : "transparent" }} />
+        </button>
+      );
+    }
+
+    function Onboarding({ initial, onComplete, onClose }) {
+      const [answers, setAnswers] = useState(initial || { name: "", motivation: [], projectType: [], relationship: [], frequency: [] });
+      const selectedMotivations = Array.isArray(answers.motivation) ? answers.motivation : answers.motivation ? [answers.motivation] : [];
+      const selectedProjectTypes = Array.isArray(answers.projectType) ? answers.projectType : answers.projectType ? [answers.projectType] : [];
+      const selectedRelationships = Array.isArray(answers.relationship) ? answers.relationship : answers.relationship ? [answers.relationship] : [];
+      const selectedFrequencies = Array.isArray(answers.frequency) ? answers.frequency : answers.frequency ? [answers.frequency] : [];
+      const includesProject = selectedMotivations.includes("projet");
+      const stepsOrder = ["profile", "motivation", ...(includesProject ? ["projectType"] : []), "relationship", "frequency", "summary"];
+      const [stepIndex, setStepIndex] = useState(0);
+      const current = stepsOrder[Math.min(stepIndex, stepsOrder.length - 1)];
+      const set = (key, val) => setAnswers((a) => ({ ...a, [key]: val }));
+      const toggleChoice = (key, val) => {
+        setAnswers((a) => {
+          const currentValues = Array.isArray(a[key]) ? a[key] : a[key] ? [a[key]] : [];
+          const nextValues = currentValues.includes(val) ? currentValues.filter((item) => item !== val) : [...currentValues, val];
+          return { ...a, [key]: nextValues };
+        });
+      };
+      const canNext =
+        current === "profile" ||
+        (current === "motivation" && selectedMotivations.length > 0) ||
+        (current === "projectType" && selectedProjectTypes.length > 0) ||
+        (current === "relationship" && selectedRelationships.length > 0) ||
+        (current === "frequency" && selectedFrequencies.length > 0) ||
+        current === "summary";
+      const next = () => setStepIndex((i) => Math.min(i + 1, stepsOrder.length - 1));
+      const back = () => setStepIndex((i) => Math.max(i - 1, 0));
+      const objLabel = objectiveLabel(answers);
+      const objEmoji = objectiveEmoji(answers);
+
+      return (
+        <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex flex-col">
+          <div className="px-5 pb-4 flex items-center justify-between" style={{ paddingTop: "calc(2rem + env(safe-area-inset-top))" }}>
+            <div className="flex gap-1.5">
+              {stepsOrder.map((s, i) => <div key={s} className="h-1.5 rounded-full transition-all" style={{ width: i === stepIndex ? 24 : 8, backgroundColor: i <= stepIndex ? ROSE : BORDER }} />)}
+            </div>
+            {onClose && <button onClick={onClose} style={{ color: TEXT_MUTED, fontSize: 20 }}>✕</button>}
           </div>
-          <button onClick={logout} className="text-[10px] mt-1 underline shrink-0" style={{ color: TEXT_MUTED }}>Déconnexion</button>
+          <div className="px-5 flex-1 overflow-y-auto">
+            <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: ROSE }}>{onClose ? "Ton profil" : "Avant de commencer"}</p>
+            {current === "profile" && (
+              <>
+                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-4">Comment je dois te saluer ?</h2>
+                <Field label="Prénom / pseudo">
+                  <input className={inputClass} style={inputStyle} value={answers.name || ""} onChange={(e) => set("name", e.target.value)} placeholder="Prénom ou pseudo" />
+                </Field>
+                <p className="text-xs leading-relaxed" style={{ color: TEXT_MUTED }}>Ce prénom sera utilisé pour te saluer au bon moment du jour et rendre l'app plus personnelle.</p>
+              </>
+            )}
+            {current === "motivation" && (
+              <>
+                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Qu'est-ce qui t'amène ici aujourd'hui ?</h2>
+                <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux choisir plusieurs réponses.</p>
+                <div className="space-y-2.5">{MOTIVATIONS.map((m) => <OptionCard key={m.id} emoji={m.emoji} label={m.label} selected={selectedMotivations.includes(m.id)} onClick={() => toggleChoice("motivation", m.id)} />)}</div>
+              </>
+            )}
+            {current === "projectType" && (
+              <>
+                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Quel type de projet ?</h2>
+                <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux en sélectionner plusieurs si besoin.</p>
+                <div className="space-y-2.5">{PROJECT_TYPES.map((p) => <OptionCard key={p.id} label={p.label} selected={selectedProjectTypes.includes(p.id)} onClick={() => toggleChoice("projectType", p.id)} />)}</div>
+              </>
+            )}
+            {current === "relationship" && (
+              <>
+                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Comment décrirais-tu ta relation à l'argent aujourd'hui ?</h2>
+                <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux choisir plusieurs réponses si ça te correspond.</p>
+                <div className="space-y-2.5">{RELATIONSHIPS.map((r) => <OptionCard key={r.id} label={r.label} selected={selectedRelationships.includes(r.id)} onClick={() => toggleChoice("relationship", r.id)} />)}</div>
+              </>
+            )}
+            {current === "frequency" && (
+              <>
+                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">À quelle fréquence veux-tu suivre ton budget ?</h2>
+                <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux en choisir plusieurs si tu veux varier.</p>
+                <div className="space-y-2.5">{FREQUENCIES.map((f) => <OptionCard key={f.id} label={f.label} selected={selectedFrequencies.includes(f.id)} onClick={() => toggleChoice("frequency", f.id)} />)}</div>
+              </>
+            )}
+            {current === "summary" && (
+              <>
+                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-5">Ton profil budget</h2>
+                <div className="rounded-xl border p-5 mb-4" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: ROSE + "20", fontSize: 18 }}>{objEmoji}</div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Ton objectif général</p>
+                      <p className="text-sm font-medium">{objLabel}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-xs pt-3 border-t" style={{ borderColor: BORDER, color: TEXT_MUTED }}>
+                    <p>Prénom : <span style={{ color: TEXT }}>{answers.name || "À renseigner"}</span></p>
+                    <p>Motivations : <span style={{ color: TEXT }}>{selectedMotivations.map((id) => MOTIVATIONS.find((m) => m.id === id)?.label).filter(Boolean).join(", ") || "À préciser"}</span></p>
+                    {includesProject && <p>Projets : <span style={{ color: TEXT }}>{selectedProjectTypes.map((id) => PROJECT_TYPES.find((p) => p.id === id)?.label).filter(Boolean).join(", ")}</span></p>}
+                    <p>Relation à l'argent : <span style={{ color: TEXT }}>{selectedRelationships.map((id) => RELATIONSHIPS.find((r) => r.id === id)?.label).filter(Boolean).join(", ")}</span></p>
+                    <p>Suivi souhaité : <span style={{ color: TEXT }}>{selectedFrequencies.map((id) => FREQUENCIES.find((f) => f.id === id)?.label).filter(Boolean).join(", ")}</span></p>
+                  </div>
+                </div>
+                <p className="text-xs leading-relaxed" style={{ color: TEXT_MUTED }}>On garde ce cap comme fil rouge — tu pourras le modifier à tout moment depuis l'onglet Parcours.</p>
+              </>
+            )}
+          </div>
+          <div className="px-5 py-5 flex gap-3" style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}>
+            {stepIndex > 0 && <button onClick={back} className="px-4 py-3 rounded-lg border" style={{ borderColor: BORDER, color: TEXT_MUTED }}>‹</button>}
+            <button disabled={!canNext} onClick={() => (current === "summary" ? onComplete(answers) : next())}
+              className="flex-1 py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>
+              {current === "summary" ? "Commencer à gérer mon budget" : "Continuer →"}
+            </button>
+          </div>
         </div>
-      </header>
+      );
+    }
 
-      {error && (
-        <div className="mx-5 mt-4 text-xs px-3 py-2 rounded" style={{ backgroundColor: DANGER + "1A", border: `1px solid ${DANGER}`, color: TEXT }}>{error}</div>
-      )}
+    function TabButton({ active, onClick, emoji, label }) {
+      return (
+        <button onClick={onClick} className="flex-1 flex flex-col items-center gap-1 py-3" style={{ color: active ? ROSE : TEXT_MUTED }}>
+          <span style={{ fontSize: 18, opacity: active ? 1 : 0.7 }}>{emoji}</span>
+          <span className="text-[9.5px] tracking-wide text-center leading-none">{label}</span>
+        </button>
+      );
+    }
 
-      <main className="px-5 mt-6">
-        {tab === "dashboard" && (
-          <Dashboard data={data} totalCharges={totalCharges} variableMonthTotal={variableMonthTotal} remaining={remaining}
-            byCategoryChart={byCategoryChart} period={period} setPeriod={setPeriod}
-            onEditIncome={() => setShowIncomeEdit(true)} onGoToCharges={() => setTab("charges")} onEditProfile={() => setEditProfile(true)} />
-        )}
-        {tab === "charges" && (
-          <Charges charges={data.charges} totalCharges={totalCharges} onAdd={() => setChargeEditor(true)} onEdit={(c) => setChargeEditor(c)} onDelete={deleteCharge} />
-        )}
-        {tab === "depenses" && (
-          <Expenses period={period} setPeriod={setPeriod} periodExpenses={variablePeriodExpenses} periodTotal={variablePeriodTotal} onDelete={deleteExpense} onAdd={() => setShowExpenseForm(true)} />
-        )}
-        {tab === "epargne" && <Savings goals={data.goals} onAdd={() => setShowGoalForm(true)} onDelete={deleteGoal} onEdit={(goal) => setGoalEditor(goal)} onContribute={contribute} />}
-        {tab === "parcours" && (
-          <Parcours data={data} onEditProfile={() => setEditProfile(true)} onExport={exportData} onImport={triggerImport} />
-        )}
-      </main>
-      <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={handleImportFile} />
-
-      <nav style={{ position: "fixed", left: 0, right: 0, bottom: 0, backgroundColor: SURFACE, borderTop: `1px solid ${BORDER}`, paddingBottom: "env(safe-area-inset-bottom)" }} className="flex">
-        <TabButton active={tab === "dashboard"} onClick={() => setTab("dashboard")} emoji="📊" label="Aperçu" />
-        <TabButton active={tab === "charges"} onClick={() => setTab("charges")} emoji="📋" label="Charges" />
-        <TabButton active={tab === "depenses"} onClick={() => setTab("depenses")} emoji="🧾" label="Dépenses" />
-        <TabButton active={tab === "epargne"} onClick={() => setTab("epargne")} emoji="🐷" label="Épargne" />
-        <TabButton active={tab === "parcours"} onClick={() => setTab("parcours")} emoji="🗺️" label="Parcours" />
-      </nav>
-
-      {showExpenseForm && <ExpenseForm onClose={() => setShowExpenseForm(false)} onSubmit={addExpense} />}
-      {chargeEditor && <ChargeForm initial={typeof chargeEditor === "object" ? chargeEditor : null} onClose={() => setChargeEditor(null)} onSubmit={saveCharge} />}
-      {showGoalForm && <GoalForm onClose={() => setShowGoalForm(false)} onSubmit={saveGoal} />}
-      {goalEditor && <GoalForm initial={goalEditor} onClose={() => setGoalEditor(null)} onSubmit={saveGoal} />}
-      {showIncomeEdit && <IncomeForm initial={data.income} onClose={() => setShowIncomeEdit(false)} onSubmit={updateIncome} />}
-    </div>
-  );
-}
-
-function OptionCard({ selected, onClick, label, emoji }) {
-  return (
-    <button onClick={onClick} className="w-full flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-colors"
-      style={{ borderColor: selected ? ROSE : BORDER, backgroundColor: selected ? ROSE + "14" : SURFACE }}>
-      {emoji && <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: (selected ? ROSE : TEXT_MUTED) + "20", fontSize: 16 }}>{emoji}</div>}
-      <span className="text-sm flex-1">{label}</span>
-      <div className="w-4 h-4 rounded-full border shrink-0" style={{ borderColor: selected ? ROSE : BORDER, backgroundColor: selected ? ROSE : "transparent" }} />
-    </button>
-  );
-}
-
-function Onboarding({ initial, onComplete, onClose }) {
-  const [answers, setAnswers] = useState(initial || { name: "", motivation: [], projectType: [], relationship: [], frequency: [] });
-  const selectedMotivations = Array.isArray(answers.motivation) ? answers.motivation : answers.motivation ? [answers.motivation] : [];
-  const selectedProjectTypes = Array.isArray(answers.projectType) ? answers.projectType : answers.projectType ? [answers.projectType] : [];
-  const selectedRelationships = Array.isArray(answers.relationship) ? answers.relationship : answers.relationship ? [answers.relationship] : [];
-  const selectedFrequencies = Array.isArray(answers.frequency) ? answers.frequency : answers.frequency ? [answers.frequency] : [];
-  const includesProject = selectedMotivations.includes("projet");
-  const stepsOrder = ["profile", "motivation", ...(includesProject ? ["projectType"] : []), "relationship", "frequency", "summary"];
-  const [stepIndex, setStepIndex] = useState(0);
-  const current = stepsOrder[Math.min(stepIndex, stepsOrder.length - 1)];
-  const set = (key, val) => setAnswers((a) => ({ ...a, [key]: val }));
-  const toggleChoice = (key, val) => {
-    setAnswers((a) => {
-      const currentValues = Array.isArray(a[key]) ? a[key] : a[key] ? [a[key]] : [];
-      const nextValues = currentValues.includes(val) ? currentValues.filter((item) => item !== val) : [...currentValues, val];
-      return { ...a, [key]: nextValues };
-    });
-  };
-  const canNext =
-    current === "profile" ||
-    (current === "motivation" && selectedMotivations.length > 0) ||
-    (current === "projectType" && selectedProjectTypes.length > 0) ||
-    (current === "relationship" && selectedRelationships.length > 0) ||
-    (current === "frequency" && selectedFrequencies.length > 0) ||
-    current === "summary";
-  const next = () => setStepIndex((i) => Math.min(i + 1, stepsOrder.length - 1));
-  const back = () => setStepIndex((i) => Math.max(i - 1, 0));
-  const objLabel = objectiveLabel(answers);
-  const objEmoji = objectiveEmoji(answers);
-
-  return (
-    <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex flex-col">
-      <div className="px-5 pb-4 flex items-center justify-between" style={{ paddingTop: "calc(2rem + env(safe-area-inset-top))" }}>
-        <div className="flex gap-1.5">
-          {stepsOrder.map((s, i) => <div key={s} className="h-1.5 rounded-full transition-all" style={{ width: i === stepIndex ? 24 : 8, backgroundColor: i <= stepIndex ? ROSE : BORDER }} />)}
+    function PeriodToggle({ period, setPeriod }) {
+      return (
+        <div className="flex rounded-full p-1 text-xs" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
+          {[{ id: "semaine", label: "Semaine" }, { id: "mois", label: "Mois" }].map((p) => (
+            <button key={p.id} onClick={() => setPeriod(p.id)} className="px-3 py-1.5 rounded-full"
+              style={{ backgroundColor: period === p.id ? ROSE : "transparent", color: period === p.id ? "#FFFFFF" : TEXT_MUTED, fontWeight: period === p.id ? 600 : 400 }}>{p.label}</button>
+          ))}
         </div>
-        {onClose && <button onClick={onClose} style={{ color: TEXT_MUTED, fontSize: 20 }}>✕</button>}
-      </div>
-      <div className="px-5 flex-1 overflow-y-auto">
-        <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: ROSE }}>{onClose ? "Ton profil" : "Avant de commencer"}</p>
-        {current === "profile" && (
-          <>
-            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-4">Comment je dois te saluer ?</h2>
-            <Field label="Prénom / pseudo">
-              <input className={inputClass} style={inputStyle} value={answers.name || ""} onChange={(e) => set("name", e.target.value)} placeholder="Prénom ou pseudo" />
-            </Field>
-            <p className="text-xs leading-relaxed" style={{ color: TEXT_MUTED }}>Ce prénom sera utilisé pour te saluer au bon moment du jour et rendre l'app plus personnelle.</p>
-          </>
-        )}
-        {current === "motivation" && (
-          <>
-            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Qu'est-ce qui t'amène ici aujourd'hui ?</h2>
-            <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux choisir plusieurs réponses.</p>
-            <div className="space-y-2.5">{MOTIVATIONS.map((m) => <OptionCard key={m.id} emoji={m.emoji} label={m.label} selected={selectedMotivations.includes(m.id)} onClick={() => toggleChoice("motivation", m.id)} />)}</div>
-          </>
-        )}
-        {current === "projectType" && (
-          <>
-            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Quel type de projet ?</h2>
-            <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux en sélectionner plusieurs si besoin.</p>
-            <div className="space-y-2.5">{PROJECT_TYPES.map((p) => <OptionCard key={p.id} label={p.label} selected={selectedProjectTypes.includes(p.id)} onClick={() => toggleChoice("projectType", p.id)} />)}</div>
-          </>
-        )}
-        {current === "relationship" && (
-          <>
-            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Comment décrirais-tu ta relation à l'argent aujourd'hui ?</h2>
-            <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux choisir plusieurs réponses si ça te correspond.</p>
-            <div className="space-y-2.5">{RELATIONSHIPS.map((r) => <OptionCard key={r.id} label={r.label} selected={selectedRelationships.includes(r.id)} onClick={() => toggleChoice("relationship", r.id)} />)}</div>
-          </>
-        )}
-        {current === "frequency" && (
-          <>
-            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">À quelle fréquence veux-tu suivre ton budget ?</h2>
-            <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux en choisir plusieurs si tu veux varier.</p>
-            <div className="space-y-2.5">{FREQUENCIES.map((f) => <OptionCard key={f.id} label={f.label} selected={selectedFrequencies.includes(f.id)} onClick={() => toggleChoice("frequency", f.id)} />)}</div>
-          </>
-        )}
-        {current === "summary" && (
-          <>
-            <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-5">Ton profil budget</h2>
-            <div className="rounded-xl border p-5 mb-4" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: ROSE + "20", fontSize: 18 }}>{objEmoji}</div>
+      );
+    }
+
+    function Card({ children, className = "", style = {} }) {
+      return <div className={`rounded-xl border p-5 ${className}`} style={{ backgroundColor: SURFACE, borderColor: BORDER, ...style }}>{children}</div>;
+    }
+
+    function ObjectiveBanner({ profile, onEdit }) {
+      if (!profile) return null;
+      return (
+        <button onClick={onEdit} className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: ROSE + "20", fontSize: 16 }}>{objectiveEmoji(profile)}</div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Ton objectif</p>
+            <p className="text-sm truncate">{objectiveLabel(profile)}</p>
+          </div>
+          <span style={{ color: TEXT_MUTED, fontSize: 13 }}>✏️</span>
+        </button>
+      );
+    }
+
+    function MetricBox({ label, value, hint, accent = TEXT }) {
+      return (
+        <div className="rounded-lg border p-3" style={{ backgroundColor: BG, borderColor: BORDER }}>
+          <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>{label}</p>
+          <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: accent }} className="text-sm mt-1">{value}</p>
+          {hint && <p className="text-[10px] mt-1" style={{ color: TEXT_MUTED }}>{hint}</p>}
+        </div>
+      );
+    }
+
+    function Dashboard({ data, totalCharges, variableMonthTotal, remaining, byCategoryChart, period, setPeriod, onEditIncome, onGoToCharges, onEditProfile, monthlyIncome, incomeSources, dailyBudget, plannedSavings, nextMajorExpense, personalAdvice }) {
+      const maxCat = Math.max(1, ...Object.values(byCategoryChart));
+      const activeCats = CATEGORIES.filter((c) => (byCategoryChart[c.id] || 0) > 0);
+      const disponible = monthlyIncome - totalCharges;
+      const incomeSummary = incomeSources.length > 0 ? incomeSources : [{ id: "default", type: "salaire", label: "Revenu mensuel", amount: monthlyIncome }];
+      const nextExpenseLabel = nextMajorExpense ? (nextMajorExpense.name || catInfo(nextMajorExpense.category)?.label || "Dépense importante") : "Aucune dépense importante enregistrée";
+      const nextExpenseValue = nextMajorExpense ? `${fmt(nextMajorExpense.amount)} €` : "—";
+      const savingsLabel = plannedSavings > 0 ? `${fmt(plannedSavings)} €/mois` : "À planifier";
+      return (
+        <div className="space-y-6">
+          <ObjectiveBanner profile={data.profile} onEdit={onEditProfile} />
+          <Card>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>Revenu mensuel</p>
+                <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-2xl mt-1">{fmt(monthlyIncome)} €</p>
+                <p className="text-[11px] mt-1" style={{ color: TEXT_MUTED }}>Ajuste ce montant si ton revenu change d'un mois à l'autre.</p>
+              </div>
+              <button onClick={onEditIncome} className="shrink-0 px-3 py-2 rounded-full text-xs font-medium" style={{ backgroundColor: SURFACE_ALT, color: ROSE }}>✏️ Modifier</button>
+            </div>
+            {incomeSummary.length > 0 && (
+              <div className="mt-4 space-y-2 border-t pt-3" style={{ borderColor: BORDER }}>
+                <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Sources de revenus</p>
+                {incomeSummary.map((source) => {
+                  const sourceLabel = INCOME_TYPES.find((item) => item.id === source.type)?.label || source.label || "Revenu";
+                  return (
+                    <div key={source.id} className="flex items-center justify-between rounded-lg px-3 py-2 text-xs" style={{ backgroundColor: BG }}>
+                      <span>{sourceLabel}</span>
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{fmt(source.amount)} €</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <MetricBox label="Budget dispo aujourd’hui" value={`${fmt(dailyBudget)} €/jour`} hint="Basé sur ce qu’il reste sur le mois" accent={SAGE} />
+              <MetricBox label="Argent restant ce mois" value={`${fmt(remaining)} €`} hint={remaining >= 0 ? "Encore de la marge" : "À surveiller"} accent={remaining >= 0 ? SAGE : DANGER} />
+              <MetricBox label="Dépenses du mois" value={`${fmt(totalCharges + variableMonthTotal)} €`} hint="Charges fixes + variables" />
+              <MetricBox label="Épargne prévue" value={savingsLabel} hint="Montant à mettre de côté" accent={ROSE} />
+            </div>
+            <div className="mt-4 rounded-lg border p-3" style={{ backgroundColor: SURFACE_ALT, borderColor: BORDER }}>
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Ton objectif général</p>
-                  <p className="text-sm font-medium">{objLabel}</p>
+                  <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: ROSE }}>Prochaine dépense importante</p>
+                  <p className="text-sm mt-1">{nextExpenseLabel}</p>
                 </div>
-              </div>
-              <div className="space-y-2 text-xs pt-3 border-t" style={{ borderColor: BORDER, color: TEXT_MUTED }}>
-                <p>Prénom : <span style={{ color: TEXT }}>{answers.name || "À renseigner"}</span></p>
-                <p>Motivations : <span style={{ color: TEXT }}>{selectedMotivations.map((id) => MOTIVATIONS.find((m) => m.id === id)?.label).filter(Boolean).join(", ") || "À préciser"}</span></p>
-                {includesProject && <p>Projets : <span style={{ color: TEXT }}>{selectedProjectTypes.map((id) => PROJECT_TYPES.find((p) => p.id === id)?.label).filter(Boolean).join(", ")}</span></p>}
-                <p>Relation à l'argent : <span style={{ color: TEXT }}>{selectedRelationships.map((id) => RELATIONSHIPS.find((r) => r.id === id)?.label).filter(Boolean).join(", ")}</span></p>
-                <p>Suivi souhaité : <span style={{ color: TEXT }}>{selectedFrequencies.map((id) => FREQUENCIES.find((f) => f.id === id)?.label).filter(Boolean).join(", ")}</span></p>
+                <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: GOLD }} className="text-sm shrink-0">{nextExpenseValue}</p>
               </div>
             </div>
-            <p className="text-xs leading-relaxed" style={{ color: TEXT_MUTED }}>On garde ce cap comme fil rouge — tu pourras le modifier à tout moment depuis l'onglet Parcours.</p>
-          </>
-        )}
-      </div>
-      <div className="px-5 py-5 flex gap-3" style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}>
-        {stepIndex > 0 && <button onClick={back} className="px-4 py-3 rounded-lg border" style={{ borderColor: BORDER, color: TEXT_MUTED }}>‹</button>}
-        <button disabled={!canNext} onClick={() => (current === "summary" ? onComplete(answers) : next())}
-          className="flex-1 py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>
-          {current === "summary" ? "Commencer à gérer mon budget" : "Continuer →"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function TabButton({ active, onClick, emoji, label }) {
-  return (
-    <button onClick={onClick} className="flex-1 flex flex-col items-center gap-1 py-3" style={{ color: active ? ROSE : TEXT_MUTED }}>
-      <span style={{ fontSize: 18, opacity: active ? 1 : 0.7 }}>{emoji}</span>
-      <span className="text-[9.5px] tracking-wide text-center leading-none">{label}</span>
-    </button>
-  );
-}
-
-function PeriodToggle({ period, setPeriod }) {
-  return (
-    <div className="flex rounded-full p-1 text-xs" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-      {[{ id: "semaine", label: "Semaine" }, { id: "mois", label: "Mois" }].map((p) => (
-        <button key={p.id} onClick={() => setPeriod(p.id)} className="px-3 py-1.5 rounded-full"
-          style={{ backgroundColor: period === p.id ? ROSE : "transparent", color: period === p.id ? "#FFFFFF" : TEXT_MUTED, fontWeight: period === p.id ? 600 : 400 }}>{p.label}</button>
-      ))}
-    </div>
-  );
-}
-
-function Card({ children, className = "", style = {} }) {
-  return <div className={`rounded-xl border p-5 ${className}`} style={{ backgroundColor: SURFACE, borderColor: BORDER, ...style }}>{children}</div>;
-}
-
-function ObjectiveBanner({ profile, onEdit }) {
-  if (!profile) return null;
-  return (
-    <button onClick={onEdit} className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: ROSE + "20", fontSize: 16 }}>{objectiveEmoji(profile)}</div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Ton objectif</p>
-        <p className="text-sm truncate">{objectiveLabel(profile)}</p>
-      </div>
-      <span style={{ color: TEXT_MUTED, fontSize: 13 }}>✏️</span>
-    </button>
-  );
-}
-
-function Dashboard({ data, totalCharges, variableMonthTotal, remaining, byCategoryChart, period, setPeriod, onEditIncome, onGoToCharges, onEditProfile }) {
-  const maxCat = Math.max(1, ...Object.values(byCategoryChart));
-  const activeCats = CATEGORIES.filter((c) => (byCategoryChart[c.id] || 0) > 0);
-  const disponible = data.income - totalCharges;
-  return (
-    <div className="space-y-6">
-      <ObjectiveBanner profile={data.profile} onEdit={onEditProfile} />
-      <Card>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
-            <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>Revenu mensuel</p>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-2xl mt-1">{fmt(data.income)} €</p>
-            <p className="text-[11px] mt-1" style={{ color: TEXT_MUTED }}>Ajuste ce montant si ton revenu change d'un mois à l'autre.</p>
-          </div>
-          <button onClick={onEditIncome} className="shrink-0 px-3 py-2 rounded-full text-xs font-medium" style={{ backgroundColor: SURFACE_ALT, color: ROSE }}>✏️ Modifier</button>
-        </div>
-        <div className="mt-5 grid grid-cols-3 gap-3 pt-4 border-t" style={{ borderColor: BORDER }}>
-          <button onClick={onGoToCharges} className="text-left">
-            <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Charges fixes</p>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm mt-0.5">{fmt(totalCharges)} €</p>
-          </button>
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Disponible</p>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm mt-0.5">{fmt(disponible)} €</p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Il te reste</p>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: remaining >= 0 ? SAGE : DANGER }} className="text-sm mt-0.5 font-medium">{fmt(remaining)} €</p>
-          </div>
-        </div>
-        <p className="text-[11px] mt-3" style={{ color: TEXT_MUTED }}>Dépenses variables du mois : {fmt(variableMonthTotal)} €</p>
-      </Card>
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>Répartition {period === "semaine" ? "(dépenses variables, semaine)" : "(charges + variables, mois)"}</p>
-        </div>
-        <div className="flex justify-end mb-3"><PeriodToggle period={period} setPeriod={setPeriod} /></div>
-        {activeCats.length === 0 ? <EmptyState text="Rien à afficher pour cette période." /> : (
-          <Card className="space-y-3">
-            {activeCats.map((c) => {
-              const val = byCategoryChart[c.id] || 0;
-              const pct = Math.round((val / maxCat) * 100);
-              return (
-                <div key={c.id} className="flex items-center gap-3">
-                  <span style={{ fontSize: 15 }} className="shrink-0">{c.emoji}</span>
-                  <span className="text-xs w-24 shrink-0 truncate">{c.label}</span>
-                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: BG }}><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: c.color }} /></div>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-xs w-16 text-right">{fmt(val)} €</span>
-                </div>
-              );
-            })}
+            <div className="mt-4 rounded-lg border p-3" style={{ backgroundColor: SURFACE_ALT, borderColor: BORDER }}>
+              <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: GOLD }}>Conseil du jour</p>
+              <p className="text-xs leading-relaxed mt-1">{personalAdvice}</p>
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-3 pt-4 border-t" style={{ borderColor: BORDER }}>
+              <button onClick={onGoToCharges} className="text-left">
+                <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Charges fixes</p>
+                <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm mt-0.5">{fmt(totalCharges)} €</p>
+              </button>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Disponible</p>
+                <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm mt-0.5">{fmt(disponible)} €</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Il te reste</p>
+                <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: remaining >= 0 ? SAGE : DANGER }} className="text-sm mt-0.5 font-medium">{fmt(remaining)} €</p>
+              </div>
+            </div>
+            <p className="text-[11px] mt-3" style={{ color: TEXT_MUTED }}>Dépenses variables du mois : {fmt(variableMonthTotal)} €</p>
           </Card>
-        )}
-      </div>
-      {data.goals.length > 0 && (
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.15em] mb-3" style={{ color: ROSE }}>Objectifs en cours</p>
-          <div className="space-y-2">
-            {data.goals.slice(0, 3).map((g) => {
-              const pct = Math.min(100, Math.round((g.current / g.target) * 100));
-              return (
-                <div key={g.id} className="flex items-center justify-between text-xs rounded-lg px-3 py-2 border" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
-                  <span>{g.name}</span><span style={{ fontFamily: "'IBM Plex Mono', monospace", color: ROSE }}>{pct}%</span>
-                </div>
-              );
-            })}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>Répartition {period === "semaine" ? "(dépenses variables, semaine)" : "(charges + variables, mois)"}</p>
+            </div>
+            <div className="flex justify-end mb-3"><PeriodToggle period={period} setPeriod={setPeriod} /></div>
+            {activeCats.length === 0 ? <EmptyState text="Rien à afficher pour cette période." /> : (
+              <Card className="space-y-3">
+                {activeCats.map((c) => {
+                  const val = byCategoryChart[c.id] || 0;
+                  const pct = Math.round((val / maxCat) * 100);
+                  return (
+                    <div key={c.id} className="flex items-center gap-3">
+                      <span style={{ fontSize: 15 }} className="shrink-0">{c.emoji}</span>
+                      <span className="text-xs w-24 shrink-0 truncate">{c.label}</span>
+                      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: BG }}><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: c.color }} /></div>
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-xs w-16 text-right">{fmt(val)} €</span>
+                    </div>
+                  );
+                })}
+              </Card>
+            )}
+          </div>
+          {data.goals.length > 0 && (
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.15em] mb-3" style={{ color: ROSE }}>Objectifs en cours</p>
+              <div className="space-y-2">
+                {data.goals.slice(0, 3).map((g) => {
+                  const pct = Math.min(100, Math.round((g.current / g.target) * 100));
+                  return (
+                    <div key={g.id} className="flex items-center justify-between text-xs rounded-lg px-3 py-2 border" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
+                      <span>{g.name}</span><span style={{ fontFamily: "'IBM Plex Mono', monospace", color: ROSE }}>{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <TipCard />
+        </div>
+      );
+    }
+
+    function TipCard() {
+      const tip = pickByDay(TIPS);
+      return (
+        <div className="rounded-xl p-4 flex gap-3" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
+          <span style={{ fontSize: 18 }} className="shrink-0">💡</span>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.15em] mb-1" style={{ color: GOLD }}>Conseil du jour</p>
+            <p className="text-xs leading-relaxed">{tip}</p>
           </div>
         </div>
-      )}
-      <TipCard />
-    </div>
-  );
-}
+      );
+    }
 
-function TipCard() {
-  const tip = pickByDay(TIPS);
-  return (
-    <div className="rounded-xl p-4 flex gap-3" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-      <span style={{ fontSize: 18 }} className="shrink-0">💡</span>
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.15em] mb-1" style={{ color: GOLD }}>Conseil du jour</p>
-        <p className="text-xs leading-relaxed">{tip}</p>
-      </div>
-    </div>
-  );
-}
-
-function Charges({ charges, totalCharges, onAdd, onEdit, onDelete }) {
-  const sorted = [...charges].sort((a, b) => Number(b.amount) - Number(a.amount));
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>{charges.length} charge{charges.length > 1 ? "s" : ""} fixe{charges.length > 1 ? "s" : ""}</p>
-        <button onClick={onAdd} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>+ Ajouter</button>
-      </div>
-      <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-lg mb-4">{fmt(totalCharges)} € <span className="text-xs font-normal" style={{ color: TEXT_MUTED }}>/ mois</span></p>
-      {sorted.length === 0 ? <EmptyState text="Aucune charge fixe définie. Ajoute ton loyer, tes abonnements, ton assurance… pour prévoir ton budget chaque mois, sans avoir à tout ressaisir." /> : (
-        <div className="space-y-2">
-          {sorted.map((c) => {
-            const info = catInfo(c.category);
-            return (
-              <div key={c.id} className="flex items-center gap-3 rounded-lg px-3 py-3 border" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
-                <button onClick={() => onEdit(c)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: info.color + "26", fontSize: 15 }}>{info.emoji}</div>
-                  <div className="flex-1 min-w-0"><p className="text-sm truncate">{c.name || info.label}</p><p className="text-[11px]" style={{ color: TEXT_MUTED }}>{info.label}</p></div>
-                </button>
-                <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm shrink-0">{fmt(c.amount)} €</p>
-                <button onClick={() => onEdit(c)} style={{ color: TEXT_MUTED, fontSize: 13 }} className="shrink-0">✏️</button>
-                <button onClick={() => onDelete(c.id)} style={{ color: TEXT_MUTED, fontSize: 14 }} className="shrink-0">🗑️</button>
-              </div>
-            );
-          })}
+    function Charges({ charges, totalCharges, onAdd, onEdit, onDelete }) {
+      const sorted = [...charges].sort((a, b) => Number(b.amount) - Number(a.amount));
+      return (
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>{charges.length} charge{charges.length > 1 ? "s" : ""} fixe{charges.length > 1 ? "s" : ""}</p>
+            <button onClick={onAdd} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>+ Ajouter</button>
+          </div>
+          <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-lg mb-4">{fmt(totalCharges)} € <span className="text-xs font-normal" style={{ color: TEXT_MUTED }}>/ mois</span></p>
+          {sorted.length === 0 ? <EmptyState text="Aucune charge fixe définie. Ajoute ton loyer, tes abonnements, ton assurance… pour prévoir ton budget chaque mois, sans avoir à tout ressaisir." /> : (
+            <div className="space-y-2">
+              {sorted.map((c) => {
+                const info = catInfo(c.category);
+                return (
+                  <div key={c.id} className="flex items-center gap-3 rounded-lg px-3 py-3 border" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
+                    <button onClick={() => onEdit(c)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: info.color + "26", fontSize: 15 }}>{info.emoji}</div>
+                      <div className="flex-1 min-w-0"><p className="text-sm truncate">{c.name || info.label}</p><p className="text-[11px]" style={{ color: TEXT_MUTED }}>{info.label}</p></div>
+                    </button>
+                    <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm shrink-0">{fmt(c.amount)} €</p>
+                    <button onClick={() => onEdit(c)} style={{ color: TEXT_MUTED, fontSize: 13 }} className="shrink-0">✏️</button>
+                    <button onClick={() => onDelete(c.id)} style={{ color: TEXT_MUTED, fontSize: 14 }} className="shrink-0">🗑️</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  );
-}
+      );
+    }
 
-function Expenses({ period, setPeriod, periodExpenses, periodTotal, onDelete, onAdd }) {
-  const sorted = [...periodExpenses].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <PeriodToggle period={period} setPeriod={setPeriod} />
-        <button onClick={onAdd} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>+ Ajouter</button>
-      </div>
-      <p className="text-[11px] uppercase tracking-[0.15em] mb-1" style={{ color: ROSE }}>Dépenses variables · {period === "semaine" ? "cette semaine" : "ce mois-ci"}</p>
-      <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-lg mb-4">{fmt(periodTotal)} €</p>
-      {sorted.length === 0 ? <EmptyState text="Aucune dépense variable pour cette période. Les charges fixes (loyer, abonnements…) se gèrent dans l'onglet Charges." /> : (
-        <div className="space-y-2">
-          {sorted.map((e) => {
-            const c = catInfo(e.category);
-            return (
-              <div key={e.id} className="flex items-center gap-3 rounded-lg px-3 py-3 border" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
-                <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: c.color + "26", fontSize: 15 }}>{c.emoji}</div>
-                <div className="flex-1 min-w-0"><p className="text-sm truncate">{e.name || c.label}</p><p className="text-[11px]" style={{ color: TEXT_MUTED }}>{c.label}{e.date ? ` · ${e.date}` : ""}</p></div>
-                <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm shrink-0">{fmt(e.amount)} €</p>
-                <button onClick={() => onDelete(e.id)} style={{ color: TEXT_MUTED, fontSize: 14 }} className="shrink-0">🗑️</button>
-              </div>
-            );
-          })}
+    function Expenses({ period, setPeriod, periodExpenses, periodTotal, onDelete, onAdd }) {
+      const sorted = [...periodExpenses].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      return (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <PeriodToggle period={period} setPeriod={setPeriod} />
+            <button onClick={onAdd} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>+ Ajouter</button>
+          </div>
+          <p className="text-[11px] uppercase tracking-[0.15em] mb-1" style={{ color: ROSE }}>Dépenses variables · {period === "semaine" ? "cette semaine" : "ce mois-ci"}</p>
+          <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-lg mb-4">{fmt(periodTotal)} €</p>
+          {sorted.length === 0 ? <EmptyState text="Aucune dépense variable pour cette période. Les charges fixes (loyer, abonnements…) se gèrent dans l'onglet Charges." /> : (
+            <div className="space-y-2">
+              {sorted.map((e) => {
+                const c = catInfo(e.category);
+                return (
+                  <div key={e.id} className="flex items-center gap-3 rounded-lg px-3 py-3 border" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: c.color + "26", fontSize: 15 }}>{c.emoji}</div>
+                    <div className="flex-1 min-w-0"><p className="text-sm truncate">{e.name || c.label}</p><p className="text-[11px]" style={{ color: TEXT_MUTED }}>{c.label}{e.date ? ` · ${e.date}` : ""}</p></div>
+                    <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm shrink-0">{fmt(e.amount)} €</p>
+                    <button onClick={() => onDelete(e.id)} style={{ color: TEXT_MUTED, fontSize: 14 }} className="shrink-0">🗑️</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  );
-}
+      );
+    }
 
-function Savings({ goals, onAdd, onDelete, onContribute, onEdit }) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>{goals.length} objectif{goals.length > 1 ? "s" : ""}</p>
-        <button onClick={onAdd} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>+ Nouvel objectif</button>
-      </div>
-      {goals.length === 0 ? <EmptyState text="Crée un objectif d'épargne pour commencer à suivre tes progrès." /> : (
-        <div className="space-y-4">{goals.map((g) => <GoalCard key={g.id} goal={g} onDelete={onDelete} onEdit={onEdit} onContribute={onContribute} />)}</div>
-      )}
-    </div>
-  );
-}
+    function Savings({ goals, onAdd, onDelete, onContribute, onEdit }) {
+      return (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>{goals.length} objectif{goals.length > 1 ? "s" : ""}</p>
+            <button onClick={onAdd} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>+ Nouvel objectif</button>
+          </div>
+          {goals.length === 0 ? <EmptyState text="Crée un objectif d'épargne pour commencer à suivre tes progrès." /> : (
+            <div className="space-y-4">{goals.map((g) => <GoalCard key={g.id} goal={g} onDelete={onDelete} onEdit={onEdit} onContribute={onContribute} />)}</div>
+          )}
+        </div>
+      );
+    }
 
-function GoalCard({ goal, onDelete, onEdit, onContribute }) {
-  const [amount, setAmount] = useState("");
-  const [contributionOrigin, setContributionOrigin] = useState("income");
-  const pct = Math.min(100, (goal.current / goal.target) * 100 || 0);
-  const ticks = 20;
-  const filledTicks = Math.round((pct / 100) * ticks);
-  const months = goal.deadline ? monthsUntil(goal.deadline) : null;
-  const monthlyNeeded = months ? Math.max(0, goal.target - goal.current) / months : null;
-  const deadlineLabel = goal.deadline ? new Date(goal.deadline).toLocaleDateString("fr-FR", { month: "long", year: "numeric" }) : null;
-  const traceItems = Array.isArray(goal.trace) ? goal.trace : [];
-  return (
-    <Card>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2"><span style={{ fontSize: 16 }}>🎯</span><p style={{ fontFamily: "'Fraunces', serif" }} className="text-lg">{goal.name}</p></div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button onClick={() => onEdit(goal)} style={{ color: TEXT_MUTED, fontSize: 14 }}>✏️</button>
-          <button onClick={() => onDelete(goal.id)} style={{ color: TEXT_MUTED, fontSize: 14 }}>🗑️</button>
-        </div>
-      </div>
-      {goal.source && (
-        <div className="mt-3 rounded-lg border px-3 py-2 text-[11px]" style={{ backgroundColor: SURFACE_ALT, borderColor: BORDER }}>
-          <p>Origine : <span style={{ color: TEXT }}>{goal.source}</span></p>
-        </div>
-      )}
-      <div className="mt-4 flex gap-[3px] h-6 items-end">
-        {Array.from({ length: ticks }).map((_, i) => <div key={i} className="flex-1 rounded-sm transition-all" style={{ height: i < filledTicks ? "100%" : "40%", backgroundColor: i < filledTicks ? ROSE : BORDER }} />)}
-      </div>
-      <div className="flex items-center justify-between mt-3">
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm">{fmt(goal.current)} / {fmt(goal.target)} €</p>
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: ROSE }} className="text-sm">{Math.round(pct)}%</p>
-      </div>
-      {monthlyNeeded !== null && <p className="text-[11px] mt-1.5" style={{ color: SAGE }}>≈ {fmt(monthlyNeeded)} €/mois pour l'atteindre d'ici {deadlineLabel}</p>}
-      {traceItems.length > 0 && (
-        <div className="mt-3 rounded-lg border px-3 py-2" style={{ backgroundColor: BG, borderColor: BORDER }}>
-          <p className="text-[10px] uppercase tracking-[0.12em] mb-1" style={{ color: TEXT_MUTED }}>Historique</p>
-          {traceItems.slice(-2).reverse().map((entry) => (
-            <p key={entry.id} className="text-[11px] leading-relaxed" style={{ color: TEXT_MUTED }}>
-              {new Date(entry.createdAt).toLocaleDateString("fr-FR")} · {entry.label} · {entry.direction === "decrease" ? "−" : "+"}{fmt(entry.amount)} €
+    function GoalCard({ goal, onDelete, onEdit, onContribute }) {
+      const [amount, setAmount] = useState("");
+      const [contributionOrigin, setContributionOrigin] = useState("income");
+      const pct = Math.min(100, (goal.current / goal.target) * 100 || 0);
+      const ticks = 20;
+      const filledTicks = Math.round((pct / 100) * ticks);
+      const months = goal.deadline ? monthsUntil(goal.deadline) : null;
+      const monthlyNeeded = months ? Math.max(0, goal.target - goal.current) / months : null;
+      const deadlineLabel = goal.deadline ? new Date(goal.deadline).toLocaleDateString("fr-FR", { month: "long", year: "numeric" }) : null;
+      const traceItems = Array.isArray(goal.trace) ? goal.trace : [];
+      return (
+        <Card>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2"><span style={{ fontSize: 16 }}>🎯</span><p style={{ fontFamily: "'Fraunces', serif" }} className="text-lg">{goal.name}</p></div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={() => onEdit(goal)} style={{ color: TEXT_MUTED, fontSize: 14 }}>✏️</button>
+              <button onClick={() => onDelete(goal.id)} style={{ color: TEXT_MUTED, fontSize: 14 }}>🗑️</button>
+            </div>
+          </div>
+          {goal.source && (
+            <div className="mt-3 rounded-lg border px-3 py-2 text-[11px]" style={{ backgroundColor: SURFACE_ALT, borderColor: BORDER }}>
+              <p>Origine : <span style={{ color: TEXT }}>{goal.source}</span></p>
+            </div>
+          )}
+          <div className="mt-4 flex gap-[3px] h-6 items-end">
+            {Array.from({ length: ticks }).map((_, i) => <div key={i} className="flex-1 rounded-sm transition-all" style={{ height: i < filledTicks ? "100%" : "40%", backgroundColor: i < filledTicks ? ROSE : BORDER }} />)}
+          </div>
+          <div className="flex items-center justify-between mt-3">
+            <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm">{fmt(goal.current)} / {fmt(goal.target)} €</p>
+            <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: ROSE }} className="text-sm">{Math.round(pct)}%</p>
+          </div>
+          {monthlyNeeded !== null && <p className="text-[11px] mt-1.5" style={{ color: SAGE }}>≈ {fmt(monthlyNeeded)} €/mois pour l'atteindre d'ici {deadlineLabel}</p>}
+          {traceItems.length > 0 && (
+            <div className="mt-3 rounded-lg border px-3 py-2" style={{ backgroundColor: BG, borderColor: BORDER }}>
+              <p className="text-[10px] uppercase tracking-[0.12em] mb-1" style={{ color: TEXT_MUTED }}>Historique</p>
+              {traceItems.slice(-2).reverse().map((entry) => (
+                <p key={entry.id} className="text-[11px] leading-relaxed" style={{ color: TEXT_MUTED }}>
+                  {new Date(entry.createdAt).toLocaleDateString("fr-FR")} · {entry.label} · {entry.direction === "decrease" ? "−" : "+"}{fmt(entry.amount)} €
+                </p>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2 mt-3">
+            <input type="number" inputMode="decimal" placeholder="Montant" value={amount} onChange={(ev) => setAmount(ev.target.value)}
+              className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none" style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, color: TEXT }} />
+            <select value={contributionOrigin} onChange={(ev) => setContributionOrigin(ev.target.value)} className="rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, color: TEXT }}>
+              <option value="income">Revenu / salaire</option>
+              <option value="gift">Don / cadeau</option>
+              <option value="other">Autre</option>
+            </select>
+            <button onClick={() => { const n = Number(amount); if (n > 0) { onContribute(goal.id, n, contributionOrigin); setAmount(""); } }}
+              className="px-3 py-2 rounded-lg text-sm font-medium shrink-0" style={{ backgroundColor: SAGE, color: "#FFFFFF" }}>Verser</button>
+          </div>
+        </Card>
+      );
+    }
+
+    function StepIcon({ done }) {
+      if (done) return <div style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: SAGE, color: "#fff", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }} className="shrink-0">✓</div>;
+      return <div style={{ width: 18, height: 18, borderRadius: "50%", border: `1px solid ${BORDER}` }} className="shrink-0" />;
+    }
+
+    function Parcours({ data, onEditProfile, onExport, onImport }) {
+      const hasIncome = data.income > 0;
+      const hasCharges = data.charges.length > 0;
+      const hasGoal = data.goals.length > 0;
+      const hasContribution = data.goals.some((g) => g.current > 0);
+      const weekStart = startOfWeek();
+      const activeDaysThisWeek = new Set(data.expenses.filter((e) => inRange(e.date, weekStart)).map((e) => e.date)).size;
+      const hasWeeklyTracking = activeDaysThisWeek > 0;
+      const steps = [
+        { label: "Revenu mensuel renseigné", done: hasIncome },
+        { label: "Charges fixes définies", done: hasCharges },
+        { label: "Un objectif d'épargne posé", done: hasGoal },
+        { label: "Premier versement à l'épargne", done: hasContribution },
+        { label: "Suivi de la semaine commencé", done: hasWeeklyTracking },
+      ];
+      const doneCount = steps.filter((s) => s.done).length;
+      const pct = Math.round((doneCount / steps.length) * 100);
+      let level = "Premiers pas";
+      if (pct === 100) level = "Maîtrise du budget";
+      else if (pct >= 80) level = "Presque au sommet";
+      else if (pct >= 40) level = "Sur la bonne voie";
+      else if (pct > 0) level = "En chemin";
+      const reflection = pickByDay(REFLECTIONS);
+
+      return (
+        <div className="space-y-6">
+          <ObjectiveBanner profile={data.profile} onEdit={onEditProfile} />
+          <Card>
+            <div className="flex items-center gap-2 mb-1"><span style={{ fontSize: 14 }}>✨</span><p className="text-xs" style={{ color: ROSE }}>{level}</p></div>
+            <div className="flex items-end gap-4 mt-3">
+              <p style={{ fontFamily: "'Fraunces', serif" }} className="text-4xl">{pct}%</p>
+              <p className="text-xs mb-1.5" style={{ color: TEXT_MUTED }}>{doneCount} / {steps.length} étapes</p>
+            </div>
+            <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ backgroundColor: BG }}><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: ROSE }} /></div>
+            <p className="text-xs mt-3" style={{ color: TEXT_MUTED }}>{activeDaysThisWeek} jour{activeDaysThisWeek > 1 ? "s" : ""} actif{activeDaysThisWeek > 1 ? "s" : ""} cette semaine</p>
+          </Card>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.15em] mb-3" style={{ color: ROSE }}>Tes premiers pas</p>
+            <div className="space-y-2">
+              {steps.map((s, i) => (
+                <div key={i} className="flex items-center gap-3 rounded-lg px-3 py-2.5 border" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
+                  <StepIcon done={s.done} /><span className="text-sm" style={{ color: s.done ? TEXT : TEXT_MUTED }}>{s.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl p-4" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
+            <p className="text-[11px] uppercase tracking-[0.15em] mb-1.5" style={{ color: ROSE }}>Question du jour</p>
+            <p className="text-sm leading-relaxed">{reflection}</p>
+          </div>
+          <div className="rounded-xl p-4 flex gap-3" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
+            <span style={{ fontSize: 18 }} className="shrink-0">🎉</span>
+            <p className="text-xs leading-relaxed">Un budget sain garde de la place pour se faire plaisir. La catégorie « Loisirs & plaisir » n'est pas un excès à éviter, c'est une ligne à prévoir.</p>
+          </div>
+          <Card>
+            <p className="text-[11px] uppercase tracking-[0.15em] mb-2" style={{ color: ROSE }}>Synchronisation</p>
+            <p className="text-xs mb-3" style={{ color: TEXT_MUTED }}>
+              Tes données sont sauvegardées automatiquement sur ton compte et disponibles sur tous tes appareils. Tu peux aussi garder une copie locale, au cas où.
             </p>
+            <div className="flex gap-2">
+              <button onClick={onExport} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>⬇️ Exporter</button>
+              <button onClick={onImport} className="flex-1 py-2.5 rounded-lg text-sm font-medium border" style={{ borderColor: BORDER, color: TEXT }}>⬆️ Importer</button>
+            </div>
+          </Card>
+          <TipCard />
+        </div>
+      );
+    }
+
+    function EmptyState({ text }) {
+      return <div className="text-center py-12 rounded-xl border border-dashed" style={{ borderColor: BORDER }}><p className="text-sm px-6" style={{ color: TEXT_MUTED }}>{text}</p></div>;
+    }
+
+    function Sheet({ title, onClose, children }) {
+      return (
+        <div className="fixed inset-0 bg-black/40 flex items-end z-50" onClick={onClose}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full rounded-t-2xl p-5 overflow-y-auto"
+            style={{ backgroundColor: SURFACE, borderTop: `1px solid ${BORDER}`, maxHeight: "85vh", paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}>
+            <div className="flex items-center justify-between mb-5">
+              <p style={{ fontFamily: "'Fraunces', serif" }} className="text-xl">{title}</p>
+              <button onClick={onClose} style={{ color: TEXT_MUTED, fontSize: 20 }}>✕</button>
+            </div>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    function Field({ label, children }) {
+      return <div className="mb-4"><label className="text-[11px] uppercase tracking-[0.15em] block mb-1.5" style={{ color: "#B97A8D" }}>{label}</label>{children}</div>;
+    }
+
+    const inputStyle = { backgroundColor: BG, border: `1px solid ${BORDER}`, color: TEXT };
+    const inputClass = "w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none";
+
+    function CategoryPicker({ category, setCategory }) {
+      return (
+        <div className="grid grid-cols-3 gap-2">
+          {CATEGORIES.map((c) => (
+            <button key={c.id} onClick={() => setCategory(c.id)} className="flex flex-col items-center gap-1 py-2.5 rounded-lg border text-[10px] text-center leading-tight"
+              style={{ borderColor: category === c.id ? c.color : BORDER, backgroundColor: category === c.id ? c.color + "1F" : "transparent", color: category === c.id ? TEXT : TEXT_MUTED }}>
+              <span style={{ fontSize: 16 }}>{c.emoji}</span>{c.label}
+            </button>
           ))}
         </div>
-      )}
-      <div className="flex gap-2 mt-3">
-        <input type="number" inputMode="decimal" placeholder="Montant" value={amount} onChange={(ev) => setAmount(ev.target.value)}
-          className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none" style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, color: TEXT }} />
-        <select value={contributionOrigin} onChange={(ev) => setContributionOrigin(ev.target.value)} className="rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, color: TEXT }}>
-          <option value="income">Revenu / salaire</option>
-          <option value="gift">Don / cadeau</option>
-          <option value="other">Autre</option>
-        </select>
-        <button onClick={() => { const n = Number(amount); if (n > 0) { onContribute(goal.id, n, contributionOrigin); setAmount(""); } }}
-          className="px-3 py-2 rounded-lg text-sm font-medium shrink-0" style={{ backgroundColor: SAGE, color: "#FFFFFF" }}>Verser</button>
-      </div>
-    </Card>
-  );
-}
+      );
+    }
 
-function StepIcon({ done }) {
-  if (done) return <div style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: SAGE, color: "#fff", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }} className="shrink-0">✓</div>;
-  return <div style={{ width: 18, height: 18, borderRadius: "50%", border: `1px solid ${BORDER}` }} className="shrink-0" />;
-}
+    function ExpenseForm({ onClose, onSubmit }) {
+      const [category, setCategory] = useState(CATEGORIES[0].id);
+      const [name, setName] = useState("");
+      const [amount, setAmount] = useState("");
+      const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+      return (
+        <Sheet title="Ajouter une dépense variable" onClose={onClose}>
+          <Field label="Catégorie"><CategoryPicker category={category} setCategory={setCategory} /></Field>
+          <Field label="Description (optionnel)"><input className={inputClass} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : sortie, cadeau, imprévu…" /></Field>
+          <Field label="Montant (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" /></Field>
+          <Field label="Date"><input type="date" className={inputClass} style={inputStyle} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+          <button disabled={!amount || Number(amount) <= 0} onClick={() => onSubmit({ category, name, amount: Number(amount), date })}
+            className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>Enregistrer →</button>
+        </Sheet>
+      );
+    }
 
-function Parcours({ data, onEditProfile, onExport, onImport }) {
-  const hasIncome = data.income > 0;
-  const hasCharges = data.charges.length > 0;
-  const hasGoal = data.goals.length > 0;
-  const hasContribution = data.goals.some((g) => g.current > 0);
-  const weekStart = startOfWeek();
-  const activeDaysThisWeek = new Set(data.expenses.filter((e) => inRange(e.date, weekStart)).map((e) => e.date)).size;
-  const hasWeeklyTracking = activeDaysThisWeek > 0;
-  const steps = [
-    { label: "Revenu mensuel renseigné", done: hasIncome },
-    { label: "Charges fixes définies", done: hasCharges },
-    { label: "Un objectif d'épargne posé", done: hasGoal },
-    { label: "Premier versement à l'épargne", done: hasContribution },
-    { label: "Suivi de la semaine commencé", done: hasWeeklyTracking },
-  ];
-  const doneCount = steps.filter((s) => s.done).length;
-  const pct = Math.round((doneCount / steps.length) * 100);
-  let level = "Premiers pas";
-  if (pct === 100) level = "Maîtrise du budget";
-  else if (pct >= 80) level = "Presque au sommet";
-  else if (pct >= 40) level = "Sur la bonne voie";
-  else if (pct > 0) level = "En chemin";
-  const reflection = pickByDay(REFLECTIONS);
+    function ChargeForm({ initial, onClose, onSubmit }) {
+      const [category, setCategory] = useState(initial?.category || CATEGORIES[0].id);
+      const [name, setName] = useState(initial?.name || "");
+      const [amount, setAmount] = useState(initial?.amount ?? "");
+      return (
+        <Sheet title={initial ? "Modifier la charge" : "Ajouter une charge fixe"} onClose={onClose}>
+          <Field label="Catégorie"><CategoryPicker category={category} setCategory={setCategory} /></Field>
+          <Field label="Nom (optionnel)"><input className={inputClass} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : Loyer studio, Netflix, Forfait SFR…" /></Field>
+          <Field label="Montant mensuel (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" /></Field>
+          <button disabled={!amount || Number(amount) <= 0} onClick={() => onSubmit({ id: initial?.id, category, name, amount: Number(amount) })}
+            className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>
+            {initial ? "Enregistrer les modifications" : "Ajouter la charge"} →
+          </button>
+        </Sheet>
+      );
+    }
 
-  return (
-    <div className="space-y-6">
-      <ObjectiveBanner profile={data.profile} onEdit={onEditProfile} />
-      <Card>
-        <div className="flex items-center gap-2 mb-1"><span style={{ fontSize: 14 }}>✨</span><p className="text-xs" style={{ color: ROSE }}>{level}</p></div>
-        <div className="flex items-end gap-4 mt-3">
-          <p style={{ fontFamily: "'Fraunces', serif" }} className="text-4xl">{pct}%</p>
-          <p className="text-xs mb-1.5" style={{ color: TEXT_MUTED }}>{doneCount} / {steps.length} étapes</p>
-        </div>
-        <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ backgroundColor: BG }}><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: ROSE }} /></div>
-        <p className="text-xs mt-3" style={{ color: TEXT_MUTED }}>{activeDaysThisWeek} jour{activeDaysThisWeek > 1 ? "s" : ""} actif{activeDaysThisWeek > 1 ? "s" : ""} cette semaine</p>
-      </Card>
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.15em] mb-3" style={{ color: ROSE }}>Tes premiers pas</p>
-        <div className="space-y-2">
-          {steps.map((s, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-lg px-3 py-2.5 border" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
-              <StepIcon done={s.done} /><span className="text-sm" style={{ color: s.done ? TEXT : TEXT_MUTED }}>{s.label}</span>
+    function GoalForm({ initial, onClose, onSubmit }) {
+      const [name, setName] = useState(initial?.name || "");
+      const [target, setTarget] = useState(initial?.target ?? "");
+      const [current, setCurrent] = useState(initial?.current ?? "");
+      const [deadline, setDeadline] = useState(initial?.deadline || "");
+      const [source, setSource] = useState(initial?.source || "");
+      return (
+        <Sheet title={initial ? "Modifier l'objectif" : "Nouvel objectif d'épargne"} onClose={onClose}>
+          <Field label="Nom de l'objectif"><input className={inputClass} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : Installation à Valence" /></Field>
+          <Field label="Montant cible (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={target} onChange={(e) => setTarget(e.target.value)} placeholder="0" /></Field>
+          <Field label="Déjà épargné (optionnel)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="0" /></Field>
+          <Field label="Date cible (optionnel)"><input type="date" className={inputClass} style={inputStyle} value={deadline} onChange={(e) => setDeadline(e.target.value)} /></Field>
+          <Field label="Origine de l'épargne"><input className={inputClass} style={inputStyle} value={source} onChange={(e) => setSource(e.target.value)} placeholder="Salaire, don, bonus, projet…" /></Field>
+          <p className="text-[11px] mb-3" style={{ color: TEXT_MUTED }}>Le montant que tu vas verser sur l'objectif sera déduit de ton revenu si tu choisis une origine liée au salaire ou au revenu. Sinon, il ne modifie pas ton revenu.</p>
+          <button disabled={!name || !target || Number(target) <= 0} onClick={() => onSubmit({
+            id: initial?.id,
+            name,
+            target: Number(target),
+            current: Number(current) || 0,
+            deadline,
+            source,
+            trace: initial?.trace || []
+          })}
+            className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>{initial ? "Enregistrer les changements" : "Créer l'objectif"} →</button>
+        </Sheet>
+      );
+    }
+
+    function IncomeForm({ initial, initialSources, onClose, onSubmit }) {
+      const [sources, setSources] = useState(
+        (Array.isArray(initialSources) && initialSources.length > 0
+          ? initialSources
+          : initial > 0
+            ? [{ id: uid(), type: "salaire", label: "Salaire", amount: initial }]
+            : [{ id: uid(), type: "salaire", label: "Salaire", amount: "" }]
+        ).map((source) => ({ ...source, amount: source.amount ?? "" }))
+      );
+
+      const updateSource = (id, key, value) => {
+        setSources((prev) => prev.map((source) => (source.id === id ? { ...source, [key]: value } : source)));
+      };
+      const addSource = () => setSources((prev) => [...prev, { id: uid(), type: "salaire", label: "", amount: "" }]);
+      const removeSource = (id) => setSources((prev) => prev.filter((source) => source.id !== id));
+      const handleSubmit = () => {
+        const normalized = sources
+          .filter((source) => String(source.label || "").trim() || Number(source.amount || 0) > 0)
+          .map((source) => ({
+            ...source,
+            label: String(source.label || "").trim() || INCOME_TYPES.find((item) => item.id === source.type)?.label || "Revenu",
+            type: source.type || "salaire",
+            amount: Number(source.amount || 0),
+          }));
+        const total = normalized.reduce((sum, source) => sum + Number(source.amount || 0), 0);
+        onSubmit({ total, sources: normalized });
+      };
+
+      return (
+        <Sheet title="Revenus mensuels" onClose={onClose}>
+          <p className="text-[11px] mb-3" style={{ color: TEXT_MUTED }}>Ajoute plusieurs entrées si ton budget vient de plusieurs sources (bourse, aide, projet, etc.).</p>
+          {sources.map((source, index) => (
+            <div key={source.id} className="rounded-xl border p-3 mb-3" style={{ backgroundColor: BG, borderColor: BORDER }}>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] uppercase tracking-[0.12em]" style={{ color: TEXT_MUTED }}>Revenu {index + 1}</p>
+                {sources.length > 1 && <button onClick={() => removeSource(source.id)} className="text-[11px]" style={{ color: TEXT_MUTED }}>Supprimer</button>}
+              </div>
+              <Field label="Type">
+                <select value={source.type} onChange={(e) => updateSource(source.id, "type", e.target.value)} className={inputClass} style={inputStyle}>
+                  {INCOME_TYPES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+                </select>
+              </Field>
+              <Field label="Libellé">
+                <input className={inputClass} style={inputStyle} value={source.label || ""} onChange={(e) => updateSource(source.id, "label", e.target.value)} placeholder="Ex. Salaire, bourse…" />
+              </Field>
+              <Field label="Montant (€)">
+                <input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={source.amount} onChange={(e) => updateSource(source.id, "amount", e.target.value)} placeholder="0" />
+              </Field>
             </div>
           ))}
-        </div>
-      </div>
-      <div className="rounded-xl p-4" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-        <p className="text-[11px] uppercase tracking-[0.15em] mb-1.5" style={{ color: ROSE }}>Question du jour</p>
-        <p className="text-sm leading-relaxed">{reflection}</p>
-      </div>
-      <div className="rounded-xl p-4 flex gap-3" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-        <span style={{ fontSize: 18 }} className="shrink-0">🎉</span>
-        <p className="text-xs leading-relaxed">Un budget sain garde de la place pour se faire plaisir. La catégorie « Loisirs & plaisir » n'est pas un excès à éviter, c'est une ligne à prévoir.</p>
-      </div>
-      <Card>
-        <p className="text-[11px] uppercase tracking-[0.15em] mb-2" style={{ color: ROSE }}>Synchronisation</p>
-        <p className="text-xs mb-3" style={{ color: TEXT_MUTED }}>
-          Tes données sont sauvegardées automatiquement sur ton compte et disponibles sur tous tes appareils. Tu peux aussi garder une copie locale, au cas où.
-        </p>
-        <div className="flex gap-2">
-          <button onClick={onExport} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>⬇️ Exporter</button>
-          <button onClick={onImport} className="flex-1 py-2.5 rounded-lg text-sm font-medium border" style={{ borderColor: BORDER, color: TEXT }}>⬆️ Importer</button>
-        </div>
-      </Card>
-      <TipCard />
-    </div>
-  );
-}
+          <button onClick={addSource} className="w-full py-2.5 rounded-lg border text-sm mb-4" style={{ borderColor: BORDER, color: TEXT_MUTED }}>+ Ajouter un revenu</button>
+          <button onClick={handleSubmit} className="w-full py-3 rounded-lg font-medium text-sm" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>Mettre à jour →</button>
+        </Sheet>
+      );
+    }
 
-function EmptyState({ text }) {
-  return <div className="text-center py-12 rounded-xl border border-dashed" style={{ borderColor: BORDER }}><p className="text-sm px-6" style={{ color: TEXT_MUTED }}>{text}</p></div>;
-}
-
-function Sheet({ title, onClose, children }) {
-  return (
-    <div className="fixed inset-0 bg-black/40 flex items-end z-50" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full rounded-t-2xl p-5 overflow-y-auto"
-        style={{ backgroundColor: SURFACE, borderTop: `1px solid ${BORDER}`, maxHeight: "85vh", paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}>
-        <div className="flex items-center justify-between mb-5">
-          <p style={{ fontFamily: "'Fraunces', serif" }} className="text-xl">{title}</p>
-          <button onClick={onClose} style={{ color: TEXT_MUTED, fontSize: 20 }}>✕</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function Field({ label, children }) {
-  return <div className="mb-4"><label className="text-[11px] uppercase tracking-[0.15em] block mb-1.5" style={{ color: "#B97A8D" }}>{label}</label>{children}</div>;
-}
-
-const inputStyle = { backgroundColor: BG, border: `1px solid ${BORDER}`, color: TEXT };
-const inputClass = "w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none";
-
-function CategoryPicker({ category, setCategory }) {
-  return (
-    <div className="grid grid-cols-3 gap-2">
-      {CATEGORIES.map((c) => (
-        <button key={c.id} onClick={() => setCategory(c.id)} className="flex flex-col items-center gap-1 py-2.5 rounded-lg border text-[10px] text-center leading-tight"
-          style={{ borderColor: category === c.id ? c.color : BORDER, backgroundColor: category === c.id ? c.color + "1F" : "transparent", color: category === c.id ? TEXT : TEXT_MUTED }}>
-          <span style={{ fontSize: 16 }}>{c.emoji}</span>{c.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function ExpenseForm({ onClose, onSubmit }) {
-  const [category, setCategory] = useState(CATEGORIES[0].id);
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  return (
-    <Sheet title="Ajouter une dépense variable" onClose={onClose}>
-      <Field label="Catégorie"><CategoryPicker category={category} setCategory={setCategory} /></Field>
-      <Field label="Description (optionnel)"><input className={inputClass} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : sortie, cadeau, imprévu…" /></Field>
-      <Field label="Montant (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" /></Field>
-      <Field label="Date"><input type="date" className={inputClass} style={inputStyle} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
-      <button disabled={!amount || Number(amount) <= 0} onClick={() => onSubmit({ category, name, amount: Number(amount), date })}
-        className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>Enregistrer →</button>
-    </Sheet>
-  );
-}
-
-function ChargeForm({ initial, onClose, onSubmit }) {
-  const [category, setCategory] = useState(initial?.category || CATEGORIES[0].id);
-  const [name, setName] = useState(initial?.name || "");
-  const [amount, setAmount] = useState(initial?.amount ?? "");
-  return (
-    <Sheet title={initial ? "Modifier la charge" : "Ajouter une charge fixe"} onClose={onClose}>
-      <Field label="Catégorie"><CategoryPicker category={category} setCategory={setCategory} /></Field>
-      <Field label="Nom (optionnel)"><input className={inputClass} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : Loyer studio, Netflix, Forfait SFR…" /></Field>
-      <Field label="Montant mensuel (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" /></Field>
-      <button disabled={!amount || Number(amount) <= 0} onClick={() => onSubmit({ id: initial?.id, category, name, amount: Number(amount) })}
-        className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>
-        {initial ? "Enregistrer les modifications" : "Ajouter la charge"} →
-      </button>
-    </Sheet>
-  );
-}
-
-function GoalForm({ initial, onClose, onSubmit }) {
-  const [name, setName] = useState(initial?.name || "");
-  const [target, setTarget] = useState(initial?.target ?? "");
-  const [current, setCurrent] = useState(initial?.current ?? "");
-  const [deadline, setDeadline] = useState(initial?.deadline || "");
-  const [source, setSource] = useState(initial?.source || "");
-  return (
-    <Sheet title={initial ? "Modifier l'objectif" : "Nouvel objectif d'épargne"} onClose={onClose}>
-      <Field label="Nom de l'objectif"><input className={inputClass} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex : Installation à Valence" /></Field>
-      <Field label="Montant cible (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={target} onChange={(e) => setTarget(e.target.value)} placeholder="0" /></Field>
-      <Field label="Déjà épargné (optionnel)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="0" /></Field>
-      <Field label="Date cible (optionnel)"><input type="date" className={inputClass} style={inputStyle} value={deadline} onChange={(e) => setDeadline(e.target.value)} /></Field>
-      <Field label="Origine de l'épargne"><input className={inputClass} style={inputStyle} value={source} onChange={(e) => setSource(e.target.value)} placeholder="Salaire, don, bonus, projet…" /></Field>
-      <p className="text-[11px] mb-3" style={{ color: TEXT_MUTED }}>Le montant que tu vas verser sur l'objectif sera déduit de ton revenu si tu choisis une origine liée au salaire ou au revenu. Sinon, il ne modifie pas ton revenu.</p>
-      <button disabled={!name || !target || Number(target) <= 0} onClick={() => onSubmit({
-        id: initial?.id,
-        name,
-        target: Number(target),
-        current: Number(current) || 0,
-        deadline,
-        source,
-        trace: initial?.trace || []
-      })}
-        className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>{initial ? "Enregistrer les changements" : "Créer l'objectif"} →</button>
-    </Sheet>
-  );
-}
-
-function IncomeForm({ initial, onClose, onSubmit }) {
-  const [val, setVal] = useState(initial || "");
-  return (
-    <Sheet title="Revenu mensuel" onClose={onClose}>
-      <Field label="Montant (€)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={val} onChange={(e) => setVal(e.target.value)} autoFocus /></Field>
-      <button onClick={() => onSubmit(val)} className="w-full py-3 rounded-lg font-medium text-sm" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>Mettre à jour →</button>
-    </Sheet>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
-</script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
-    });
-  }
-</script>
+    ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => { });
+      });
+    }
+  </script>
 </body>
+
 </html>
