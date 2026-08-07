@@ -182,7 +182,55 @@
       return `${name}, un budget clair commence par une petite décision aujourd'hui : consigne une dépense, puis laisse l'app te guider.`;
     }
 
-    const DEFAULT_DATA = { onboarded: false, profile: null, income: 0, incomeSources: [], charges: [], expenses: [], goals: [], history: [] };
+    function getFinancialProfile({ remaining, monthlyIncome, plannedSavings }) {
+      if (remaining < 0) return { label: "Dépensière impulsive", note: "Le rythme actuel demande plus de vigilance." };
+      if (plannedSavings > 0 && monthlyIncome > 0 && plannedSavings >= monthlyIncome * 0.15) {
+        return { label: "Économe", note: "Tu mets déjà de la marge de côté avec méthode." };
+      }
+      if (remaining > 0 && remaining < monthlyIncome * 0.25) {
+        return { label: "Irrégulière", note: "Ton suivi reste un peu instable, mais tu peux le stabiliser." };
+      }
+      return { label: "Prudente", note: "Tu gardes un bon équilibre entre besoins et plaisir." };
+    }
+
+    function getWeeklySummary(data) {
+      const expenses = Array.isArray(data?.expenses) ? data.expenses : [];
+      const currentWeekStart = startOfWeek();
+      const previousWeekStart = new Date(currentWeekStart);
+      previousWeekStart.setDate(previousWeekStart.getDate() - 7);
+
+      const currentWeek = expenses.filter((expense) => inRange(expense.date, currentWeekStart));
+      const previousWeek = expenses.filter((expense) => {
+        const day = new Date(expense.date);
+        return day >= previousWeekStart && day < currentWeekStart;
+      });
+
+      const sumByCategory = (list) => {
+        const map = {};
+        list.forEach((expense) => {
+          map[expense.category] = (map[expense.category] || 0) + Number(expense.amount || 0);
+        });
+        return map;
+      };
+
+      const currentMap = sumByCategory(currentWeek);
+      const previousMap = sumByCategory(previousWeek);
+      let best = null;
+      Object.keys(currentMap).forEach((category) => {
+        const previousValue = Number(previousMap[category] || 0);
+        const currentValue = Number(currentMap[category] || 0);
+        const diff = previousValue - currentValue;
+        if (diff > 20 && (!best || diff > best.diff)) {
+          best = { category, diff, label: catInfo(category).label };
+        }
+      });
+      if (best) {
+        return `Tu as dépensé moins en ${best.label.toLowerCase()} cette semaine.`;
+      }
+      return "Tu as tenu un rythme plus stable cette semaine.";
+    }
+
+    const DEFAULT_DATA = { onboarded: false, profile: null, income: 0, incomeSources: [], budgetSplit: { needs: 50, pleasures: 30, savings: 20 }, charges: [], expenses: [], goals: [], history: [] };
 
     const TIPS = [
       "Automatise un virement vers ton épargne le jour où tu es payée : ce que tu ne vois pas, tu ne le dépenses pas.",
@@ -496,6 +544,7 @@
         persist({ ...data, income: nextIncome, incomeSources: nextSources });
         setShowIncomeEdit(false);
       };
+      const updateBudgetSplit = (nextSplit) => persist({ ...data, budgetSplit: nextSplit });
       const finishOnboarding = (profile) => persist({ ...data, profile, onboarded: true });
       const saveProfile = (profile) => { persist({ ...data, profile }); setEditProfile(false); };
 
@@ -571,7 +620,7 @@
                 byCategoryChart={byCategoryChart} period={period} setPeriod={setPeriod}
                 onEditIncome={() => setShowIncomeEdit(true)} onGoToCharges={() => setTab("charges")} onEditProfile={() => setEditProfile(true)}
                 monthlyIncome={monthlyIncome} incomeSources={incomeSources} dailyBudget={dailyBudget} plannedSavings={plannedSavings}
-                nextMajorExpense={nextMajorExpense} personalAdvice={personalAdvice} />
+                nextMajorExpense={nextMajorExpense} personalAdvice={personalAdvice} budgetSplit={data.budgetSplit || { needs: 50, pleasures: 30, savings: 20 }} onUpdateBudgetSplit={updateBudgetSplit} />
             )}
             {tab === "charges" && (
               <Charges charges={data.charges} totalCharges={totalCharges} onAdd={() => setChargeEditor(true)} onEdit={(c) => setChargeEditor(c)} onDelete={deleteCharge} />
@@ -773,14 +822,21 @@
       );
     }
 
-    function Dashboard({ data, totalCharges, variableMonthTotal, remaining, byCategoryChart, period, setPeriod, onEditIncome, onGoToCharges, onEditProfile, monthlyIncome, incomeSources, dailyBudget, plannedSavings, nextMajorExpense, personalAdvice }) {
+    function Dashboard({ data, totalCharges, variableMonthTotal, remaining, byCategoryChart, period, setPeriod, onEditIncome, onGoToCharges, onEditProfile, monthlyIncome, incomeSources, dailyBudget, plannedSavings, nextMajorExpense, personalAdvice, budgetSplit, onUpdateBudgetSplit }) {
       const maxCat = Math.max(1, ...Object.values(byCategoryChart));
       const activeCats = CATEGORIES.filter((c) => (byCategoryChart[c.id] || 0) > 0);
-      const disponible = monthlyIncome - totalCharges;
       const incomeSummary = incomeSources.length > 0 ? incomeSources : [{ id: "default", type: "salaire", label: "Revenu mensuel", amount: monthlyIncome }];
       const nextExpenseLabel = nextMajorExpense ? (nextMajorExpense.name || catInfo(nextMajorExpense.category)?.label || "Dépense importante") : "Aucune dépense importante enregistrée";
       const nextExpenseValue = nextMajorExpense ? `${fmt(nextMajorExpense.amount)} €` : "—";
       const savingsLabel = plannedSavings > 0 ? `${fmt(plannedSavings)} €/mois` : "À planifier";
+      const profile = getFinancialProfile({ remaining, monthlyIncome, plannedSavings });
+      const weeklySummary = getWeeklySummary(data);
+      const split = budgetSplit || { needs: 50, pleasures: 30, savings: 20 };
+      const totalSplit = Number(split.needs || 0) + Number(split.pleasures || 0) + Number(split.savings || 0);
+      const needsPct = totalSplit > 0 ? (Number(split.needs || 0) / totalSplit) * 100 : 0;
+      const pleasuresPct = totalSplit > 0 ? (Number(split.pleasures || 0) / totalSplit) * 100 : 0;
+      const savingsPct = totalSplit > 0 ? (Number(split.savings || 0) / totalSplit) * 100 : 0;
+      const donutGradient = `conic-gradient(${ROSE} 0 ${needsPct}%, ${GOLD} ${needsPct}% ${needsPct + pleasuresPct}%, ${SAGE} ${needsPct + pleasuresPct}% 100%)`;
       return (
         <div className="space-y-6">
           <ObjectiveBanner profile={data.profile} onEdit={onEditProfile} />
@@ -826,25 +882,63 @@
               <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: GOLD }}>Conseil du jour</p>
               <p className="text-xs leading-relaxed mt-1">{personalAdvice}</p>
             </div>
-            <div className="mt-5 grid grid-cols-3 gap-3 pt-4 border-t" style={{ borderColor: BORDER }}>
-              <button onClick={onGoToCharges} className="text-left">
-                <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Charges fixes</p>
-                <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm mt-0.5">{fmt(totalCharges)} €</p>
-              </button>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Disponible</p>
-                <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm mt-0.5">{fmt(disponible)} €</p>
+                <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>Profil financier</p>
+                <p className="text-sm font-medium mt-1">{profile.label}</p>
+                <p className="text-[11px] mt-1" style={{ color: TEXT_MUTED }}>{profile.note}</p>
               </div>
+              <div className="rounded-full px-3 py-2 text-[11px]" style={{ backgroundColor: SURFACE_ALT, color: ROSE }}>{monthlyIncome > 0 ? `${fmt(monthlyIncome * 0.2)} €` : "—"}</div>
+            </div>
+          </Card>
+
+          <Card>
+            <p className="text-[11px] uppercase tracking-[0.15em] mb-3" style={{ color: ROSE }}>Résumé hebdomadaire</p>
+            <p className="text-sm leading-relaxed">{weeklySummary}</p>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Il te reste</p>
-                <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: remaining >= 0 ? SAGE : DANGER }} className="text-sm mt-0.5 font-medium">{fmt(remaining)} €</p>
+                <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>Le graphe principal</p>
+                <p className="text-[11px] mt-1" style={{ color: TEXT_MUTED }}>Répartition personnalisable selon la méthode 50/30/20</p>
+              </div>
+              <div className="text-[10px]" style={{ color: TEXT_MUTED }}>Personnalisé</div>
+            </div>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+              <div className="relative flex items-center justify-center shrink-0">
+                <div className="w-28 h-28 rounded-full" style={{ background: donutGradient }}>
+                  <div className="absolute inset-3 rounded-full" style={{ backgroundColor: SURFACE }} />
+                </div>
+                <div className="absolute text-center">
+                  <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Répartition</p>
+                  <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm">{fmt(totalSplit)}%</p>
+                </div>
+              </div>
+              <div className="flex-1 space-y-2">
+                {[
+                  { key: "needs", label: "Besoins", color: ROSE, value: split.needs },
+                  { key: "pleasures", label: "Plaisirs", color: GOLD, value: split.pleasures },
+                  { key: "savings", label: "Épargne / objectifs", color: SAGE, value: split.savings },
+                ].map((item) => (
+                  <div key={item.key} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-xs flex-1">{item.label}</span>
+                    <select value={item.value} onChange={(e) => onUpdateBudgetSplit({ ...split, [item.key]: Number(e.target.value) })} className="rounded-lg px-2 py-1 text-xs" style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, color: TEXT }}>
+                      {Array.from({ length: 21 }, (_, i) => i * 5).map((value) => <option key={value} value={value}>{value}%</option>)}
+                    </select>
+                  </div>
+                ))}
               </div>
             </div>
-            <p className="text-[11px] mt-3" style={{ color: TEXT_MUTED }}>Dépenses variables du mois : {fmt(variableMonthTotal)} €</p>
           </Card>
+
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>Répartition {period === "semaine" ? "(dépenses variables, semaine)" : "(charges + variables, mois)"}</p>
+              <p className="text-[11px] uppercase tracking-[0.15em]" style={{ color: ROSE }}>Répartition détaillée {period === "semaine" ? "(dépenses variables, semaine)" : "(charges + variables, mois)"}</p>
             </div>
             <div className="flex justify-end mb-3"><PeriodToggle period={period} setPeriod={setPeriod} /></div>
             {activeCats.length === 0 ? <EmptyState text="Rien à afficher pour cette période." /> : (
@@ -879,7 +973,6 @@
               </div>
             </div>
           )}
-          <TipCard />
         </div>
       );
     }
