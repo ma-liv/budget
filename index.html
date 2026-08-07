@@ -339,43 +339,12 @@ function App({ session }) {
     persist({ ...data, charges: data.charges.filter((c) => c.id !== id) });
   };
   const saveGoal = (goal) => {
-    const source = goal.source || "";
-    const incomeImpact = getIncomeImpactFromSource(source);
-    const adjustmentAmount = Number(goal.incomeAdjustmentAmount) || 0;
-    const incomeDelta = incomeImpact === "decrease" ? -adjustmentAmount : 0;
     const trace = Array.isArray(goal.trace) ? goal.trace : [];
-    const newTraceEntry = adjustmentAmount > 0 ? [{
-      id: uid(),
-      createdAt: new Date().toISOString(),
-      type: "income-adjustment",
-      label: incomeImpact === "decrease" ? "Réduction du revenu mensuel" : "Suivi de l'origine de l'épargne",
-      amount: adjustmentAmount,
-      source: source || "Non précisé",
-      direction: incomeImpact === "decrease" ? "decrease" : "none",
-    }] : [];
-
     const nextGoals = goal.id
-      ? data.goals.map((g) => (g.id === goal.id ? { ...g, ...goal, current: Number(goal.current) || 0, trace: [...trace, ...newTraceEntry] } : g))
-      : [...data.goals, { ...goal, id: uid(), current: Number(goal.current) || 0, trace: [...trace, ...newTraceEntry] }];
+      ? data.goals.map((g) => (g.id === goal.id ? { ...g, ...goal, current: Number(goal.current) || 0, trace } : g))
+      : [...data.goals, { ...goal, id: uid(), current: Number(goal.current) || 0, trace }];
 
-    const nextData = {
-      ...data,
-      goals: nextGoals,
-      income: Number(data.income || 0) + incomeDelta,
-      history: adjustmentAmount > 0 ? [
-        ...((data.history || []).slice(0, 9)),
-        {
-          id: uid(),
-          createdAt: new Date().toISOString(),
-          label: `${goal.name || "Objectif"} · ${source || "Origine non précisée"}`,
-          amount: adjustmentAmount,
-          direction: incomeImpact === "decrease" ? "decrease" : "none",
-          type: "savings-origin",
-        }
-      ] : data.history || [],
-    };
-
-    persist(nextData);
+    persist({ ...data, goals: nextGoals });
     setShowGoalForm(false);
     setGoalEditor(null);
   };
@@ -857,10 +826,9 @@ function GoalCard({ goal, onDelete, onEdit, onContribute }) {
           <button onClick={() => onDelete(goal.id)} style={{ color: TEXT_MUTED, fontSize: 14 }}>🗑️</button>
         </div>
       </div>
-      {(goal.source || goal.incomeAdjustmentAmount > 0) && (
+      {goal.source && (
         <div className="mt-3 rounded-lg border px-3 py-2 text-[11px]" style={{ backgroundColor: SURFACE_ALT, borderColor: BORDER }}>
-          {goal.source ? <p className="mb-1">Origine : <span style={{ color: TEXT }}>{goal.source}</span></p> : null}
-          {goal.incomeAdjustmentAmount > 0 ? <p>Ajustement revenu : <span style={{ color: ROSE }}>{goal.incomeAdjustmentType === "decrease" ? "réduction" : "augmentation"} de {fmt(goal.incomeAdjustmentAmount)} € / mois</span></p> : null}
+          <p>Origine : <span style={{ color: TEXT }}>{goal.source}</span></p>
         </div>
       )}
       <div className="mt-4 flex gap-[3px] h-6 items-end">
@@ -1056,7 +1024,7 @@ function GoalForm({ initial, onClose, onSubmit }) {
       <Field label="Déjà épargné (optionnel)"><input type="number" inputMode="decimal" className={inputClass} style={inputStyle} value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="0" /></Field>
       <Field label="Date cible (optionnel)"><input type="date" className={inputClass} style={inputStyle} value={deadline} onChange={(e) => setDeadline(e.target.value)} /></Field>
       <Field label="Origine de l'épargne"><input className={inputClass} style={inputStyle} value={source} onChange={(e) => setSource(e.target.value)} placeholder="Salaire, don, bonus, projet…" /></Field>
-      <p className="text-[11px] mb-3" style={{ color: TEXT_MUTED }}>Si l'origine correspond à ton revenu ou à ton salaire, la hausse d'épargne sera prise en compte dans ton revenu mensuel. Si c'est un don ou un cadeau, elle n'affectera pas le revenu.</p>
+      <p className="text-[11px] mb-3" style={{ color: TEXT_MUTED }}>Le montant que tu vas verser sur l'objectif sera déduit de ton revenu si tu choisis une origine liée au salaire ou au revenu. Sinon, il ne modifie pas ton revenu.</p>
       <button disabled={!name || !target || Number(target) <= 0} onClick={() => onSubmit({
         id: initial?.id,
         name,
@@ -1064,7 +1032,6 @@ function GoalForm({ initial, onClose, onSubmit }) {
         current: Number(current) || 0,
         deadline,
         source,
-        incomeAdjustmentAmount: Number(target) || 0,
         trace: initial?.trace || []
       })}
         className="w-full py-3 rounded-lg font-medium text-sm disabled:opacity-40" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>{initial ? "Enregistrer les changements" : "Créer l'objectif"} →</button>
