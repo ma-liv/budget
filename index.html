@@ -17,6 +17,7 @@
   <title>Mon Budget</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
 
     * {
       box-sizing: border-box;
@@ -33,6 +34,17 @@
 
     body {
       font-family: 'IBM Plex Sans', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      letter-spacing: -0.02em;
     }
 
     input,
@@ -90,27 +102,30 @@
     const DANGER = "#C1573D";
 
     const CATEGORIES = [
-      { id: "loyer", label: "Loyer", emoji: "🏠", color: GOLD },
-      { id: "abonnements", label: "Abonnements", emoji: "🔁", color: SAGE },
-      { id: "courses", label: "Courses", emoji: "🛒", color: "#CE7A52" },
-      { id: "shopping", label: "Shopping", emoji: "🛍️", color: "#9868A8" },
-      { id: "transport", label: "Transport", emoji: "🚗", color: "#4E7FAE" },
-      { id: "assurance", label: "Assurance", emoji: "🛡️", color: "#3F8F8F" },
-      { id: "telephone", label: "Téléphone / SIM", emoji: "📱", color: ROSE },
-      { id: "sante", label: "Santé", emoji: "💊", color: "#D18242" },
-      { id: "plaisir", label: "Loisirs & plaisir", emoji: "🎉", color: ROSE_PALE },
-      { id: "autres", label: "Autres", emoji: "🗂️", color: "#9C8A8D" },
+      { id: "loyer", label: "Loyer", icon: "house", color: GOLD },
+      { id: "abonnements", label: "Abonnements", icon: "rotate-right", color: SAGE },
+      { id: "courses", label: "Courses", icon: "cart-shopping", color: "#CE7A52" },
+      { id: "shopping", label: "Shopping", icon: "bag-shopping", color: "#9868A8" },
+      { id: "transport", label: "Transport", icon: "car", color: "#4E7FAE" },
+      { id: "assurance", label: "Assurance", icon: "shield-heart", color: "#3F8F8F" },
+      { id: "telephone", label: "Téléphone / SIM", icon: "phone", color: ROSE },
+      { id: "sante", label: "Santé", icon: "heart-pulse", color: "#D18242" },
+      { id: "plaisir", label: "Loisirs & plaisir", icon: "sparkles", color: ROSE_PALE },
+      { id: "autres", label: "Autres", icon: "folder-open", color: "#9C8A8D" },
     ];
     const INCOME_TYPES = [
-      { id: "salaire", label: "Salaire", emoji: "💼" },
-      { id: "bourse", label: "Bourse", emoji: "🎓" },
-      { id: "aide_familiale", label: "Aide familiale", emoji: "🏡" },
-      { id: "projet", label: "Revenu d’un projet", emoji: "🚀" },
-      { id: "occasionnel", label: "Revenu occasionnel", emoji: "✨" },
+      { id: "salaire", label: "Salaire", icon: "briefcase" },
+      { id: "bourse", label: "Bourse", icon: "graduation-cap" },
+      { id: "aide_familiale", label: "Aide familiale", icon: "house-chimney" },
+      { id: "projet", label: "Revenu d’un projet", icon: "rocket" },
+      { id: "occasionnel", label: "Revenu occasionnel", icon: "sparkles" },
     ];
     const catInfo = (id) => CATEGORIES.find((c) => c.id === id) || CATEGORIES[CATEGORIES.length - 1];
     const uid = () => Math.random().toString(36).slice(2, 10);
     const fmt = (n) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(Number(n) || 0);
+    const Icon = ({ name, className = "", style = {}, size = 14 }) => (
+      <i className={`fa-solid fa-${name} ${className}`.trim()} style={{ fontSize: size, lineHeight: 1, ...style }} aria-hidden="true" />
+    );
 
     function getIncomeSources(data) {
       const stored = Array.isArray(data?.incomeSources) ? data.incomeSources : [];
@@ -250,10 +265,10 @@
       "Qu'est-ce que tu pourrais mettre de côté avant même de le voir sur ton compte ?",
     ];
     const MOTIVATIONS = [
-      { id: "projet", label: "Réaliser un projet précis", emoji: "🎯" },
-      { id: "gaspillage", label: "Apprendre à ne pas gaspiller", emoji: "💡" },
-      { id: "epargne", label: "Voir clair dans mon épargne", emoji: "🐷" },
-      { id: "organisation", label: "Mieux organiser mon quotidien", emoji: "📋" },
+      { id: "projet", label: "Réaliser un projet précis", icon: "bullseye" },
+      { id: "gaspillage", label: "Apprendre à ne pas gaspiller", icon: "lightbulb" },
+      { id: "epargne", label: "Voir clair dans mon épargne", icon: "piggy-bank" },
+      { id: "organisation", label: "Mieux organiser mon quotidien", icon: "clipboard-list" },
     ];
     const PROJECT_TYPES = [
       { id: "logement", label: "Logement / installation" },
@@ -317,7 +332,7 @@
       const motivations = Array.isArray(profile?.motivation) ? profile.motivation : profile?.motivation ? [profile.motivation] : [];
       const first = motivations[0];
       const m = MOTIVATIONS.find((x) => x.id === first);
-      return m ? m.emoji : "🧭";
+      return m ? <Icon name={m.icon} size={15} /> : <Icon name="compass" size={15} />;
     }
 
     function confirmDeleteAction(label) {
@@ -633,11 +648,11 @@
           <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={handleImportFile} />
 
           <nav style={{ position: "fixed", left: 0, right: 0, bottom: 0, backgroundColor: SURFACE, borderTop: `1px solid ${BORDER}`, paddingBottom: "env(safe-area-inset-bottom)" }} className="flex">
-            <TabButton active={tab === "dashboard"} onClick={() => setTab("dashboard")} emoji="📊" label="Aperçu" />
-            <TabButton active={tab === "charges"} onClick={() => setTab("charges")} emoji="📋" label="Charges" />
-            <TabButton active={tab === "depenses"} onClick={() => setTab("depenses")} emoji="🧾" label="Dépenses" />
-            <TabButton active={tab === "epargne"} onClick={() => setTab("epargne")} emoji="🐷" label="Épargne" />
-            <TabButton active={tab === "parcours"} onClick={() => setTab("parcours")} emoji="🗺️" label="Parcours" />
+            <TabButton active={tab === "dashboard"} onClick={() => setTab("dashboard")} icon="chart-column" label="Aperçu" />
+            <TabButton active={tab === "charges"} onClick={() => setTab("charges")} icon="receipt" label="Charges" />
+            <TabButton active={tab === "depenses"} onClick={() => setTab("depenses")} icon="wallet" label="Dépenses" />
+            <TabButton active={tab === "epargne"} onClick={() => setTab("epargne")} icon="piggy-bank" label="Épargne" />
+            <TabButton active={tab === "parcours"} onClick={() => setTab("parcours")} icon="route" label="Parcours" />
           </nav>
 
           {showExpenseForm && <ExpenseForm onClose={() => setShowExpenseForm(false)} onSubmit={addExpense} />}
@@ -649,11 +664,11 @@
       );
     }
 
-    function OptionCard({ selected, onClick, label, emoji }) {
+    function OptionCard({ selected, onClick, label, icon }) {
       return (
         <button onClick={onClick} className="w-full flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-colors"
           style={{ borderColor: selected ? ROSE : BORDER, backgroundColor: selected ? ROSE + "14" : SURFACE }}>
-          {emoji && <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: (selected ? ROSE : TEXT_MUTED) + "20", fontSize: 16 }}>{emoji}</div>}
+          {icon && <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: (selected ? ROSE : TEXT_MUTED) + "20", color: selected ? ROSE : TEXT_MUTED }}><Icon name={icon} size={15} /></div>}
           <span className="text-sm flex-1">{label}</span>
           <div className="w-4 h-4 rounded-full border shrink-0" style={{ borderColor: selected ? ROSE : BORDER, backgroundColor: selected ? ROSE : "transparent" }} />
         </button>
@@ -696,7 +711,7 @@
             <div className="flex gap-1.5">
               {stepsOrder.map((s, i) => <div key={s} className="h-1.5 rounded-full transition-all" style={{ width: i === stepIndex ? 24 : 8, backgroundColor: i <= stepIndex ? ROSE : BORDER }} />)}
             </div>
-            {onClose && <button onClick={onClose} style={{ color: TEXT_MUTED, fontSize: 20 }}>✕</button>}
+            {onClose && <button onClick={onClose} style={{ color: TEXT_MUTED, fontSize: 20 }} aria-label="Fermer"><Icon name="xmark" size={14} /></button>}
           </div>
           <div className="px-5 flex-1 overflow-y-auto">
             <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: ROSE }}>{onClose ? "Ton profil" : "Avant de commencer"}</p>
@@ -713,7 +728,7 @@
               <>
                 <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Qu'est-ce qui t'amène ici aujourd'hui ?</h2>
                 <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux choisir plusieurs réponses.</p>
-                <div className="space-y-2.5">{MOTIVATIONS.map((m) => <OptionCard key={m.id} emoji={m.emoji} label={m.label} selected={selectedMotivations.includes(m.id)} onClick={() => toggleChoice("motivation", m.id)} />)}</div>
+                <div className="space-y-2.5">{MOTIVATIONS.map((m) => <OptionCard key={m.id} icon={m.icon} label={m.label} selected={selectedMotivations.includes(m.id)} onClick={() => toggleChoice("motivation", m.id)} />)}</div>
               </>
             )}
             {current === "projectType" && (
@@ -771,10 +786,10 @@
       );
     }
 
-    function TabButton({ active, onClick, emoji, label }) {
+    function TabButton({ active, onClick, icon, label }) {
       return (
         <button onClick={onClick} className="flex-1 flex flex-col items-center gap-1 py-3" style={{ color: active ? ROSE : TEXT_MUTED }}>
-          <span style={{ fontSize: 18, opacity: active ? 1 : 0.7 }}>{emoji}</span>
+          <Icon name={icon} size={16} style={{ opacity: active ? 1 : 0.7 }} />
           <span className="text-[9.5px] tracking-wide text-center leading-none">{label}</span>
         </button>
       );
@@ -799,12 +814,12 @@
       if (!profile) return null;
       return (
         <button onClick={onEdit} className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: ROSE + "20", fontSize: 16 }}>{objectiveEmoji(profile)}</div>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: ROSE + "20", color: ROSE }}>{objectiveEmoji(profile)}</div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] uppercase tracking-[0.1em]" style={{ color: TEXT_MUTED }}>Ton objectif</p>
             <p className="text-sm truncate">{objectiveLabel(profile)}</p>
           </div>
-          <span style={{ color: TEXT_MUTED, fontSize: 13 }}>✏️</span>
+          <span style={{ color: TEXT_MUTED, fontSize: 13 }}><Icon name="pen" size={12} /></span>
         </button>
       );
     }
@@ -848,7 +863,7 @@
                 <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-2xl mt-1">{fmt(monthlyIncome)} €</p>
                 <p className="text-[11px] mt-1" style={{ color: TEXT_MUTED }}>Ajuste ce montant si ton revenu change d'un mois à l'autre.</p>
               </div>
-              <button onClick={onEditIncome} className="shrink-0 px-3 py-2 rounded-full text-xs font-medium" style={{ backgroundColor: SURFACE_ALT, color: ROSE }}>✏️ Modifier</button>
+              <button onClick={onEditIncome} className="shrink-0 px-3 py-2 rounded-full text-xs font-medium" style={{ backgroundColor: SURFACE_ALT, color: ROSE }}><span className="inline-flex items-center gap-1"><Icon name="pen" size={10} /> Modifier</span></button>
             </div>
             {incomeSummary.length > 0 && (
               <div className="mt-4 space-y-2 border-t pt-3" style={{ borderColor: BORDER }}>
@@ -913,7 +928,7 @@
                   const pct = Math.round((val / maxCat) * 100);
                   return (
                     <div key={c.id} className="flex items-center gap-3">
-                      <span style={{ fontSize: 15 }} className="shrink-0">{c.emoji}</span>
+                      <span style={{ fontSize: 15, color: c.color }} className="shrink-0"><Icon name={c.icon} size={14} /></span>
                       <span className="text-xs w-24 shrink-0 truncate">{c.label}</span>
                       <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: BG }}><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: c.color }} /></div>
                       <span style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-xs w-16 text-right">{fmt(val)} €</span>
@@ -946,7 +961,7 @@
       const tip = pickByDay(TIPS);
       return (
         <div className="rounded-xl p-4 flex gap-3" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-          <span style={{ fontSize: 18 }} className="shrink-0">💡</span>
+          <span style={{ fontSize: 18 }} className="shrink-0"><Icon name="lightbulb" size={16} /></span>
           <div>
             <p className="text-[11px] uppercase tracking-[0.15em] mb-1" style={{ color: GOLD }}>Conseil du jour</p>
             <p className="text-xs leading-relaxed">{tip}</p>
@@ -971,12 +986,12 @@
                 return (
                   <div key={c.id} className="flex items-center gap-3 rounded-lg px-3 py-3 border" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
                     <button onClick={() => onEdit(c)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: info.color + "26", fontSize: 15 }}>{info.emoji}</div>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: info.color + "26", color: info.color }}><Icon name={info.icon} size={14} /></div>
                       <div className="flex-1 min-w-0"><p className="text-sm truncate">{c.name || info.label}</p><p className="text-[11px]" style={{ color: TEXT_MUTED }}>{info.label}</p></div>
                     </button>
                     <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm shrink-0">{fmt(c.amount)} €</p>
-                    <button onClick={() => onEdit(c)} style={{ color: TEXT_MUTED, fontSize: 13 }} className="shrink-0">✏️</button>
-                    <button onClick={() => onDelete(c.id)} style={{ color: TEXT_MUTED, fontSize: 14 }} className="shrink-0">🗑️</button>
+                    <button onClick={() => onEdit(c)} style={{ color: TEXT_MUTED, fontSize: 13 }} className="shrink-0"><Icon name="pen" size={12} /></button>
+                    <button onClick={() => onDelete(c.id)} style={{ color: TEXT_MUTED, fontSize: 14 }} className="shrink-0"><Icon name="trash" size={12} /></button>
                   </div>
                 );
               })}
@@ -1013,10 +1028,10 @@
                 const c = catInfo(e.category);
                 return (
                   <div key={e.id} className="flex items-center gap-3 rounded-lg px-3 py-3 border" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: c.color + "26", fontSize: 15 }}>{c.emoji}</div>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: c.color + "26", color: c.color }}><Icon name={c.icon} size={14} /></div>
                     <div className="flex-1 min-w-0"><p className="text-sm truncate">{e.name || c.label}</p><p className="text-[11px]" style={{ color: TEXT_MUTED }}>{c.label}{e.date ? ` · ${e.date}` : ""}</p></div>
                     <p style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-sm shrink-0">{fmt(e.amount)} €</p>
-                    <button onClick={() => onDelete(e.id)} style={{ color: TEXT_MUTED, fontSize: 14 }} className="shrink-0">🗑️</button>
+                    <button onClick={() => onDelete(e.id)} style={{ color: TEXT_MUTED, fontSize: 14 }} className="shrink-0"><Icon name="trash" size={12} /></button>
                   </div>
                 );
               })}
@@ -1053,10 +1068,10 @@
       return (
         <Card>
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2"><span style={{ fontSize: 16 }}>🎯</span><p style={{ fontFamily: "'Fraunces', serif" }} className="text-lg">{goal.name}</p></div>
+            <div className="flex items-center gap-2"><span style={{ fontSize: 16, color: ROSE }}><Icon name="bullseye" size={14} /></span><p style={{ fontFamily: "'Fraunces', serif" }} className="text-lg">{goal.name}</p></div>
             <div className="flex items-center gap-2 shrink-0">
-              <button onClick={() => onEdit(goal)} style={{ color: TEXT_MUTED, fontSize: 14 }}>✏️</button>
-              <button onClick={() => onDelete(goal.id)} style={{ color: TEXT_MUTED, fontSize: 14 }}>🗑️</button>
+              <button onClick={() => onEdit(goal)} style={{ color: TEXT_MUTED, fontSize: 14 }}><Icon name="pen" size={12} /></button>
+              <button onClick={() => onDelete(goal.id)} style={{ color: TEXT_MUTED, fontSize: 14 }}><Icon name="trash" size={12} /></button>
             </div>
           </div>
           {goal.source && (
@@ -1132,7 +1147,7 @@
         <div className="space-y-6">
           <ObjectiveBanner profile={data.profile} onEdit={onEditProfile} />
           <Card>
-            <div className="flex items-center gap-2 mb-1"><span style={{ fontSize: 14 }}>✨</span><p className="text-xs" style={{ color: ROSE }}>{level}</p></div>
+            <div className="flex items-center gap-2 mb-1"><span style={{ fontSize: 14, color: ROSE }}><Icon name="sparkles" size={12} /></span><p className="text-xs" style={{ color: ROSE }}>{level}</p></div>
             <div className="flex items-end gap-4 mt-3">
               <p style={{ fontFamily: "'Fraunces', serif" }} className="text-4xl">{pct}%</p>
               <p className="text-xs mb-1.5" style={{ color: TEXT_MUTED }}>{doneCount} / {steps.length} étapes</p>
@@ -1166,7 +1181,7 @@
             <p className="text-sm leading-relaxed">{reflection}</p>
           </div>
           <div className="rounded-xl p-4 flex gap-3" style={{ backgroundColor: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-            <span style={{ fontSize: 18 }} className="shrink-0">🎉</span>
+            <span style={{ fontSize: 18, color: GOLD }} className="shrink-0"><Icon name="gift" size={15} /></span>
             <p className="text-xs leading-relaxed">Un budget sain garde de la place pour se faire plaisir. La catégorie « Loisirs & plaisir » n'est pas un excès à éviter, c'est une ligne à prévoir.</p>
           </div>
           <Card>
@@ -1175,8 +1190,8 @@
               Tes données sont sauvegardées automatiquement sur ton compte et disponibles sur tous tes appareils. Tu peux aussi garder une copie locale, au cas où.
             </p>
             <div className="flex gap-2">
-              <button onClick={onExport} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}>⬇️ Exporter</button>
-              <button onClick={onImport} className="flex-1 py-2.5 rounded-lg text-sm font-medium border" style={{ borderColor: BORDER, color: TEXT }}>⬆️ Importer</button>
+              <button onClick={onExport} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}><span className="inline-flex items-center justify-center gap-2"><Icon name="download" size={12} /> Exporter</span></button>
+              <button onClick={onImport} className="flex-1 py-2.5 rounded-lg text-sm font-medium border" style={{ borderColor: BORDER, color: TEXT }}><span className="inline-flex items-center justify-center gap-2"><Icon name="upload" size={12} /> Importer</span></button>
             </div>
           </Card>
           <TipCard />
@@ -1195,7 +1210,7 @@
             style={{ backgroundColor: SURFACE, borderTop: `1px solid ${BORDER}`, maxHeight: "85vh", paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}>
             <div className="flex items-center justify-between mb-5">
               <p style={{ fontFamily: "'Fraunces', serif" }} className="text-xl">{title}</p>
-              <button onClick={onClose} style={{ color: TEXT_MUTED, fontSize: 20 }}>✕</button>
+              <button onClick={onClose} style={{ color: TEXT_MUTED, fontSize: 20 }} aria-label="Fermer"><Icon name="xmark" size={14} /></button>
             </div>
             {children}
           </div>
@@ -1216,7 +1231,8 @@
           {CATEGORIES.map((c) => (
             <button key={c.id} onClick={() => setCategory(c.id)} className="flex flex-col items-center gap-1 py-2.5 rounded-lg border text-[10px] text-center leading-tight"
               style={{ borderColor: category === c.id ? c.color : BORDER, backgroundColor: category === c.id ? c.color + "1F" : "transparent", color: category === c.id ? TEXT : TEXT_MUTED }}>
-              <span style={{ fontSize: 16 }}>{c.emoji}</span>{c.label}
+              <Icon name={c.icon} size={16} style={{ color: category === c.id ? c.color : TEXT_MUTED }} />
+              <span>{c.label}</span>
             </button>
           ))}
         </div>
