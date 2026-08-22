@@ -624,6 +624,15 @@
         addSheet("Depenses", data.expenses.map((expense) => ({ Date: expense.date, Nom: expense.name || catInfo(expense.category).label, Categorie: catInfo(expense.category).label, Montant: Number(expense.amount || 0) })), ["Montant"], ["Date"]);
         addSheet("Epargne", data.goals.map((goal) => ({ Objectif: goal.name, Cible: Number(goal.target || 0), Actuel: Number(goal.current || 0), DateLimite: goal.deadline || "" })), ["Cible", "Actuel"], ["DateLimite"]);
         addSheet("Profil", [{ Nom: data.profile?.name || "", RevenuMensuel: monthlyIncome }], ["RevenuMensuel"]);
+        const categoryTotals = {};
+        data.expenses.forEach((expense) => { const label = catInfo(expense.category).label; categoryTotals[label] = (categoryTotals[label] || 0) + Number(expense.amount || 0); });
+        addSheet("Synthese", [
+          { Indicateur: "Revenus mensuels", Valeur: monthlyIncome },
+          { Indicateur: "Charges fixes", Valeur: totalCharges },
+          { Indicateur: "Depenses variables", Valeur: variableMonthTotal },
+          { Indicateur: "Reste a vivre", Valeur: remaining },
+          ...Object.entries(categoryTotals).map(([categorie, montant]) => ({ Indicateur: `Depenses - ${categorie}`, Valeur: montant })),
+        ], ["Valeur"]);
         const output = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
         downloadBlob(new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `mon-budget-${new Date().toISOString().slice(0, 10)}.xlsx`);
       };
@@ -632,32 +641,81 @@
           setError("Le module PDF n'est pas disponible. Vérifie ta connexion puis réessaie.");
           return;
         }
-        const doc = new window.jspdf.jsPDF();
-        const lines = [
-          "MON BUDGET",
-          `Rapport du ${new Date().toLocaleDateString("fr-FR")}`,
-          "",
-          `Revenus mensuels : ${fmt(monthlyIncome)} EUR`,
-          `Charges fixes : ${fmt(totalCharges)} EUR`,
-          `Depenses variables : ${fmt(variableMonthTotal)} EUR`,
-          `Reste a vivre : ${fmt(remaining)} EUR`,
-          "",
-          "DEPENSES",
-          ...data.expenses.map((expense) => `${expense.date || ""}  ${expense.name || catInfo(expense.category).label}  ${fmt(expense.amount)} EUR`),
-          "",
-          "CHARGES FIXES",
-          ...data.charges.map((charge) => `${charge.name || catInfo(charge.category).label}  ${fmt(charge.amount)} EUR`),
-          "",
-          "OBJECTIFS D'EPARGNE",
-          ...data.goals.map((goal) => `${goal.name}  ${fmt(goal.current)} / ${fmt(goal.target)} EUR`),
-        ];
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(11);
-        lines.forEach((line, index) => {
-          if (index > 0 && index % 42 === 0) doc.addPage();
-          doc.text(line, 16, 18 + (index % 42) * 6);
-        });
-        doc.save(`mon-budget-${new Date().toISOString().slice(0, 10)}.pdf`);
+        const doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4" });
+        const page = { width: 210, height: 297, margin: 16 };
+        const colors = { ink: [59, 46, 48], muted: [122, 104, 107], rose: [200, 86, 120], pale: [252, 233, 237], sage: [88, 138, 103], gold: [185, 138, 46], line: [234, 215, 218], white: [255, 255, 255] };
+        let cursor = 0;
+        const setColor = (type) => doc.setTextColor(...colors[type]);
+        const footer = () => {
+          doc.setDrawColor(...colors.line);
+          doc.line(page.margin, page.height - 13, page.width - page.margin, page.height - 13);
+          doc.setFontSize(8);
+          setColor("muted");
+          doc.text("Mon Budget", page.margin, page.height - 7);
+          doc.text(`Page ${doc.getNumberOfPages()}`, page.width - page.margin, page.height - 7, { align: "right" });
+        };
+        const newPage = () => { if (cursor > page.height - 48) { footer(); doc.addPage(); cursor = 20; } };
+        const title = (text, subtitle = "") => {
+          newPage();
+          setColor("rose");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(16);
+          doc.text(text, page.margin, cursor);
+          cursor += 6;
+          if (subtitle) { setColor("muted"); doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.text(subtitle, page.margin, cursor); cursor += 7; }
+          doc.setDrawColor(...colors.line);
+          doc.line(page.margin, cursor, page.width - page.margin, cursor);
+          cursor += 8;
+        };
+        const card = (x, y, width, label, value, accent) => {
+          doc.setFillColor(...colors.pale);
+          doc.roundedRect(x, y, width, 23, 3, 3, "F");
+          setColor("muted"); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.text(label, x + 5, y + 8);
+          setColor(accent); doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.text(value, x + 5, y + 17);
+        };
+        const table = (headers, rows, widths) => {
+          const rowHeight = 7;
+          newPage();
+          doc.setFillColor(...colors.rose); doc.rect(page.margin, cursor - 5, widths.reduce((a, b) => a + b, 0), rowHeight, "F");
+          setColor("white"); doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+          let x = page.margin;
+          headers.forEach((header, index) => { doc.text(header, x + 3, cursor, { maxWidth: widths[index] - 6 }); x += widths[index]; });
+          cursor += 5;
+          rows.forEach((row, rowIndex) => {
+            newPage();
+            if (rowIndex % 2 === 0) { doc.setFillColor(...colors.pale); doc.rect(page.margin, cursor - 4, widths.reduce((a, b) => a + b, 0), rowHeight, "F"); }
+            setColor("ink"); doc.setFont("helvetica", "normal"); doc.setFontSize(8); x = page.margin;
+            row.forEach((value, index) => { doc.text(String(value || "-"), x + 3, cursor, { maxWidth: widths[index] - 6 }); x += widths[index]; });
+            cursor += rowHeight;
+          });
+          cursor += 5;
+        };
+
+        doc.setFillColor(...colors.rose); doc.rect(0, 0, page.width, 72, "F");
+        setColor("white"); doc.setFont("helvetica", "bold"); doc.setFontSize(27); doc.text("MON BUDGET", page.margin, 32);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.text("Ton rapport financier personnel", page.margin, 42);
+        doc.setFontSize(9); doc.text(`Genere le ${new Date().toLocaleDateString("fr-FR")}`, page.margin, 57);
+        cursor = 91;
+        title("Vue d'ensemble", data.profile?.name ? `Profil de ${data.profile.name}` : "Synthese de ta situation");
+        card(page.margin, cursor, 42, "REVENUS", `${fmt(monthlyIncome)} EUR`, "rose");
+        card(page.margin + 45, cursor, 42, "CHARGES", `${fmt(totalCharges)} EUR`, "gold");
+        card(page.margin + 90, cursor, 42, "VARIABLE", `${fmt(variableMonthTotal)} EUR`, "sage");
+        card(page.margin + 135, cursor, 43, "RESTE", `${fmt(remaining)} EUR`, remaining >= 0 ? "sage" : "rose");
+        cursor += 34;
+        const categoryTotals = {};
+        data.expenses.forEach((expense) => { const label = catInfo(expense.category).label; categoryTotals[label] = (categoryTotals[label] || 0) + Number(expense.amount || 0); });
+        const categoryRows = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]).map(([label, amount]) => [label, `${fmt(amount)} EUR`]);
+        title("Repartition des depenses", "Toutes les depenses variables enregistrees");
+        table(["Categorie", "Montant"], categoryRows.length ? categoryRows : [["Aucune depense", "0 EUR"]], [125, 53]);
+        title("Revenus et charges", "Les donnees utilisees pour calculer ton budget");
+        table(["Source de revenu", "Montant"], getIncomeSources(data).map((source) => [source.label || "Revenu", `${fmt(source.amount)} EUR`]).concat([["Total revenus", `${fmt(monthlyIncome)} EUR`]]), [125, 53]);
+        table(["Charge fixe", "Categorie", "Montant"], data.charges.map((charge) => [charge.name || catInfo(charge.category).label, catInfo(charge.category).label, `${fmt(charge.amount)} EUR`]).concat([["Total charges", "", `${fmt(totalCharges)} EUR`]]), [82, 55, 41]);
+        title("Depenses variables", "Chaque depense saisie dans l'application");
+        table(["Date", "Depense", "Categorie", "Montant"], data.expenses.length ? data.expenses.map((expense) => [expense.date || "-", expense.name || catInfo(expense.category).label, catInfo(expense.category).label, `${fmt(expense.amount)} EUR`]) : [["-", "Aucune depense", "-", "0 EUR"]], [30, 70, 48, 30]);
+        title("Objectifs d'epargne", "Avancement de tous tes objectifs");
+        table(["Objectif", "Progression", "Echeance"], data.goals.length ? data.goals.map((goal) => [`${goal.name}`, `${fmt(goal.current)} / ${fmt(goal.target)} EUR`, goal.deadline || "-" ]) : [["Aucun objectif", "-", "-"]], [80, 58, 40]);
+        footer();
+        doc.save(`mon-budget-rapport-${new Date().toISOString().slice(0, 10)}.pdf`);
       };
       const triggerImport = () => fileInputRef.current && fileInputRef.current.click();
       const handleImportFile = (e) => {
