@@ -61,7 +61,7 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     Babel.registerPreset("react-classic", {
@@ -579,12 +579,51 @@
           return;
         }
         const workbook = XLSX.utils.book_new();
-        const addSheet = (name, rows) => XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), name);
-        addSheet("Revenus", getIncomeSources(data).map((source) => ({ Type: source.type, Libelle: source.label, Montant: Number(source.amount || 0) })));
-        addSheet("Charges", data.charges.map((charge) => ({ Nom: charge.name || catInfo(charge.category).label, Categorie: catInfo(charge.category).label, Montant: Number(charge.amount || 0) })));
-        addSheet("Depenses", data.expenses.map((expense) => ({ Date: expense.date, Nom: expense.name || catInfo(expense.category).label, Categorie: catInfo(expense.category).label, Montant: Number(expense.amount || 0) })));
-        addSheet("Epargne", data.goals.map((goal) => ({ Objectif: goal.name, Cible: Number(goal.target || 0), Actuel: Number(goal.current || 0), DateLimite: goal.deadline || "" })));
-        addSheet("Profil", [{ Nom: data.profile?.name || "", RevenuMensuel: monthlyIncome }]);
+        const excelTheme = {
+          header: { fill: { fgColor: { rgb: "C85678" } }, font: { name: "Lora", sz: 11, bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "A94766" } } } },
+          body: { font: { name: "Lora", sz: 10, color: { rgb: "3B2E30" } }, alignment: { vertical: "center" } },
+          alternate: { fill: { fgColor: { rgb: "FCE9ED" } } },
+          money: { numFmt: '#,##0.00 "€"', alignment: { horizontal: "right" } },
+          date: { numFmt: "dd/mm/yyyy", alignment: { horizontal: "center" } },
+        };
+        const addSheet = (name, rows, moneyColumns = [], dateColumns = []) => {
+          const sheet = XLSX.utils.json_to_sheet(rows);
+          const range = XLSX.utils.decode_range(sheet["!ref"] || "A1:A1");
+          for (let rowIndex = range.s.r; rowIndex <= range.e.r; rowIndex += 1) {
+            for (let columnIndex = range.s.c; columnIndex <= range.e.c; columnIndex += 1) {
+              const address = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
+              if (!sheet[address]) continue;
+              sheet[address].s = rowIndex === 0 ? excelTheme.header : { ...excelTheme.body, ...(rowIndex % 2 === 0 ? excelTheme.alternate : {}) };
+            }
+          }
+          const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
+          moneyColumns.forEach((column) => {
+            const columnIndex = headers.indexOf(column);
+            if (columnIndex < 0) return;
+            for (let rowIndex = 1; rowIndex <= range.e.r; rowIndex += 1) {
+              const cell = sheet[XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex })];
+              if (cell) cell.s = { ...cell.s, ...excelTheme.money };
+            }
+          });
+          dateColumns.forEach((column) => {
+            const columnIndex = headers.indexOf(column);
+            if (columnIndex < 0) return;
+            for (let rowIndex = 1; rowIndex <= range.e.r; rowIndex += 1) {
+              const cell = sheet[XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex })];
+              if (cell) cell.s = { ...cell.s, ...excelTheme.date };
+            }
+          });
+          sheet["!cols"] = headers.map((header) => ({ wch: Math.min(28, Math.max(14, header.length + 4)) }));
+          sheet["!rows"] = [{ hpt: 24 }, ...rows.map(() => ({ hpt: 21 }))];
+          if (sheet["!ref"]) sheet["!autofilter"] = { ref: sheet["!ref"] };
+          sheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+          XLSX.utils.book_append_sheet(workbook, sheet, name);
+        };
+        addSheet("Revenus", getIncomeSources(data).map((source) => ({ Type: source.type, Libelle: source.label, Montant: Number(source.amount || 0) })), ["Montant"]);
+        addSheet("Charges", data.charges.map((charge) => ({ Nom: charge.name || catInfo(charge.category).label, Categorie: catInfo(charge.category).label, Montant: Number(charge.amount || 0) })), ["Montant"]);
+        addSheet("Depenses", data.expenses.map((expense) => ({ Date: expense.date, Nom: expense.name || catInfo(expense.category).label, Categorie: catInfo(expense.category).label, Montant: Number(expense.amount || 0) })), ["Montant"], ["Date"]);
+        addSheet("Epargne", data.goals.map((goal) => ({ Objectif: goal.name, Cible: Number(goal.target || 0), Actuel: Number(goal.current || 0), DateLimite: goal.deadline || "" })), ["Cible", "Actuel"], ["DateLimite"]);
+        addSheet("Profil", [{ Nom: data.profile?.name || "", RevenuMensuel: monthlyIncome }], ["RevenuMensuel"]);
         const output = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
         downloadBlob(new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `mon-budget-${new Date().toISOString().slice(0, 10)}.xlsx`);
       };
