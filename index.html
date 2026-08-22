@@ -33,7 +33,7 @@
     }
 
     body {
-      font-family: sans-serif;
+      font-family: 'Lora', serif;
     }
 
     h1,
@@ -61,6 +61,8 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     Babel.registerPreset("react-classic", {
       presets: [[Babel.availablePresets.react, { runtime: "classic" }]],
@@ -372,7 +374,7 @@
 
       if (session === undefined) {
         return (
-          <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex items-center justify-center">
+          <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'Lora', serif" }} className="flex items-center justify-center">
             <p className="text-sm opacity-70">Connexion…</p>
           </div>
         );
@@ -409,9 +411,9 @@
       };
 
       return (
-        <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex flex-col justify-center px-6">
+        <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'Lora', serif" }} className="flex flex-col justify-center px-6">
           <p className="text-xs tracking-[0.2em] uppercase mb-2 text-center" style={{ color: ROSE }}>Mon budget</p>
-          <h1 style={{ fontFamily: "'Fraunces', serif" }} className="text-3xl text-center mb-8">
+          <h1 style={{ fontFamily: "'Lora', serif" }} className="text-3xl text-center mb-8">
             {mode === "signup" ? "Créer ton compte" : "Content de te revoir"}
           </h1>
           <div className="max-w-sm w-full mx-auto">
@@ -561,16 +563,62 @@
       const finishOnboarding = (profile) => persist({ ...data, profile, onboarded: true });
       const saveProfile = (profile) => { persist({ ...data, profile }); setEditProfile(false); };
 
-      const exportData = () => {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const downloadBlob = (blob, filename) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `mon-budget-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      };
+      const exportExcel = () => {
+        if (!window.XLSX) {
+          setError("Le module Excel n'est pas disponible. Vérifie ta connexion puis réessaie.");
+          return;
+        }
+        const workbook = XLSX.utils.book_new();
+        const addSheet = (name, rows) => XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), name);
+        addSheet("Revenus", getIncomeSources(data).map((source) => ({ Type: source.type, Libelle: source.label, Montant: Number(source.amount || 0) })));
+        addSheet("Charges", data.charges.map((charge) => ({ Nom: charge.name || catInfo(charge.category).label, Categorie: catInfo(charge.category).label, Montant: Number(charge.amount || 0) })));
+        addSheet("Depenses", data.expenses.map((expense) => ({ Date: expense.date, Nom: expense.name || catInfo(expense.category).label, Categorie: catInfo(expense.category).label, Montant: Number(expense.amount || 0) })));
+        addSheet("Epargne", data.goals.map((goal) => ({ Objectif: goal.name, Cible: Number(goal.target || 0), Actuel: Number(goal.current || 0), DateLimite: goal.deadline || "" })));
+        addSheet("Profil", [{ Nom: data.profile?.name || "", RevenuMensuel: monthlyIncome }]);
+        const output = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+        downloadBlob(new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `mon-budget-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      };
+      const exportPdf = () => {
+        if (!window.jspdf?.jsPDF) {
+          setError("Le module PDF n'est pas disponible. Vérifie ta connexion puis réessaie.");
+          return;
+        }
+        const doc = new window.jspdf.jsPDF();
+        const lines = [
+          "MON BUDGET",
+          `Rapport du ${new Date().toLocaleDateString("fr-FR")}`,
+          "",
+          `Revenus mensuels : ${fmt(monthlyIncome)} EUR`,
+          `Charges fixes : ${fmt(totalCharges)} EUR`,
+          `Depenses variables : ${fmt(variableMonthTotal)} EUR`,
+          `Reste a vivre : ${fmt(remaining)} EUR`,
+          "",
+          "DEPENSES",
+          ...data.expenses.map((expense) => `${expense.date || ""}  ${expense.name || catInfo(expense.category).label}  ${fmt(expense.amount)} EUR`),
+          "",
+          "CHARGES FIXES",
+          ...data.charges.map((charge) => `${charge.name || catInfo(charge.category).label}  ${fmt(charge.amount)} EUR`),
+          "",
+          "OBJECTIFS D'EPARGNE",
+          ...data.goals.map((goal) => `${goal.name}  ${fmt(goal.current)} / ${fmt(goal.target)} EUR`),
+        ];
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        lines.forEach((line, index) => {
+          if (index > 0 && index % 42 === 0) doc.addPage();
+          doc.text(line, 16, 18 + (index % 42) * 6);
+        });
+        doc.save(`mon-budget-${new Date().toISOString().slice(0, 10)}.pdf`);
       };
       const triggerImport = () => fileInputRef.current && fileInputRef.current.click();
       const handleImportFile = (e) => {
@@ -579,19 +627,35 @@
         const reader = new FileReader();
         reader.onload = (ev) => {
           try {
-            const parsed = JSON.parse(ev.target.result);
+            if (!window.XLSX) throw new Error("XLSX indisponible");
+            const workbook = XLSX.read(ev.target.result, { type: "array", cellDates: false });
+            const rows = (name) => XLSX.utils.sheet_to_json(workbook.Sheets[name] || {}, { defval: "" });
+            const categoryId = (label) => CATEGORIES.find((category) => category.label.toLowerCase() === String(label).toLowerCase())?.id || "autres";
+            const revenus = rows("Revenus");
+            const charges = rows("Charges");
+            const depenses = rows("Depenses");
+            const epargne = rows("Epargne");
+            const profil = rows("Profil")[0] || {};
+            const parsed = {
+              income: Number(profil.RevenuMensuel || 0),
+              incomeSources: revenus.map((source) => ({ id: uid(), type: source.Type || "occasionnel", label: source.Libelle || "Revenu", amount: Number(source.Montant || 0) })),
+              charges: charges.map((charge) => ({ id: uid(), name: charge.Nom || "", category: categoryId(charge.Categorie), amount: Number(charge.Montant || 0) })),
+              expenses: depenses.map((expense) => ({ id: uid(), date: expense.Date || "", name: expense.Nom || "", category: categoryId(expense.Categorie), amount: Number(expense.Montant || 0) })),
+              goals: epargne.map((goal) => ({ id: uid(), name: goal.Objectif || "Objectif", target: Number(goal.Cible || 0), current: Number(goal.Actuel || 0), deadline: goal.DateLimite || "", trace: [] })),
+              profile: profil.Nom ? { name: profil.Nom } : data.profile,
+            };
             if (window.confirm("Remplacer toutes tes données actuelles par cette sauvegarde ?")) persist({ ...DEFAULT_DATA, ...parsed });
           } catch (err) {
-            setError("Ce fichier n'est pas une sauvegarde valide.");
+            setError("Ce fichier Excel n'est pas exploitable ou ne contient pas les feuilles attendues.");
           }
         };
-        reader.readAsText(file);
+        reader.readAsArrayBuffer(file);
         e.target.value = "";
       };
 
       if (!dataReady) {
         return (
-          <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex items-center justify-center">
+          <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'Lora', serif" }} className="flex items-center justify-center">
             <p className="text-sm opacity-70">Chargement de tes données…</p>
           </div>
         );
@@ -605,7 +669,7 @@
       const displayName = data.profile?.name?.trim() || "toi";
 
       return (
-        <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", backgroundColor: BG, color: TEXT, minHeight: "100vh", paddingBottom: "calc(84px + env(safe-area-inset-bottom))" }}>
+        <div style={{ fontFamily: "'Lora', serif", backgroundColor: BG, color: TEXT, minHeight: "100vh", paddingBottom: "calc(84px + env(safe-area-inset-bottom))" }}>
           {editProfile && (
             <div style={{ position: "fixed", inset: 0, zIndex: 50, backgroundColor: BG }}>
               <Onboarding initial={data.profile} onComplete={saveProfile} onClose={() => setEditProfile(false)} />
@@ -616,7 +680,7 @@
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs tracking-[0.2em] uppercase" style={{ color: ROSE }}>{greeting} {displayName}</p>
-                <h1 style={{ fontFamily: "'Fraunces', serif" }} className="text-3xl mt-1 font-semibold">Mon budget</h1>
+                <h1 style={{ fontFamily: "'Lora', serif" }} className="text-3xl mt-1 font-semibold">Mon budget</h1>
                 <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: TEXT_MUTED }} className="text-[11px] mt-1 capitalize">{monthLabel}</p>
               </div>
               <button onClick={logout} className="text-[10px] mt-1 underline shrink-0" style={{ color: TEXT_MUTED }}>Déconnexion</button>
@@ -642,10 +706,10 @@
             )}
             {tab === "epargne" && <Savings goals={data.goals} onAdd={() => setShowGoalForm(true)} onDelete={deleteGoal} onEdit={(goal) => setGoalEditor(goal)} onContribute={contribute} />}
             {tab === "parcours" && (
-              <Parcours data={data} onEditProfile={() => setEditProfile(true)} onExport={exportData} onImport={triggerImport} />
+              <Parcours data={data} onEditProfile={() => setEditProfile(true)} onExportPdf={exportPdf} onExportExcel={exportExcel} onImport={triggerImport} />
             )}
           </main>
-          <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={handleImportFile} />
+          <input ref={fileInputRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style={{ display: "none" }} onChange={handleImportFile} />
 
           <nav style={{ position: "fixed", left: 0, right: 0, bottom: 0, backgroundColor: SURFACE, borderTop: `1px solid ${BORDER}`, paddingBottom: "env(safe-area-inset-bottom)" }} className="flex">
             <TabButton active={tab === "dashboard"} onClick={() => setTab("dashboard")} icon="chart-column" label="Aperçu" />
@@ -706,7 +770,7 @@
       const objEmoji = objectiveEmoji(answers);
 
       return (
-        <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'IBM Plex Sans', sans-serif" }} className="flex flex-col">
+        <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh", fontFamily: "'Lora', serif" }} className="flex flex-col">
           <div className="px-5 pb-4 flex items-center justify-between" style={{ paddingTop: "calc(2rem + env(safe-area-inset-top))" }}>
             <div className="flex gap-1.5">
               {stepsOrder.map((s, i) => <div key={s} className="h-1.5 rounded-full transition-all" style={{ width: i === stepIndex ? 24 : 8, backgroundColor: i <= stepIndex ? ROSE : BORDER }} />)}
@@ -717,7 +781,7 @@
             <p className="text-xs tracking-[0.2em] uppercase mb-2" style={{ color: ROSE }}>{onClose ? "Ton profil" : "Avant de commencer"}</p>
             {current === "profile" && (
               <>
-                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-4">Comment je dois te saluer ?</h2>
+                <h2 style={{ fontFamily: "'Lora', serif" }} className="text-2xl mb-4">Comment je dois te saluer ?</h2>
                 <Field label="Prénom / pseudo">
                   <input className={inputClass} style={inputStyle} value={answers.name || ""} onChange={(e) => set("name", e.target.value)} placeholder="Prénom ou pseudo" />
                 </Field>
@@ -726,35 +790,35 @@
             )}
             {current === "motivation" && (
               <>
-                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Qu'est-ce qui t'amène ici aujourd'hui ?</h2>
+                <h2 style={{ fontFamily: "'Lora', serif" }} className="text-2xl mb-2">Qu'est-ce qui t'amène ici aujourd'hui ?</h2>
                 <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux choisir plusieurs réponses.</p>
                 <div className="space-y-2.5">{MOTIVATIONS.map((m) => <OptionCard key={m.id} icon={m.icon} label={m.label} selected={selectedMotivations.includes(m.id)} onClick={() => toggleChoice("motivation", m.id)} />)}</div>
               </>
             )}
             {current === "projectType" && (
               <>
-                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Quel type de projet ?</h2>
+                <h2 style={{ fontFamily: "'Lora', serif" }} className="text-2xl mb-2">Quel type de projet ?</h2>
                 <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux en sélectionner plusieurs si besoin.</p>
                 <div className="space-y-2.5">{PROJECT_TYPES.map((p) => <OptionCard key={p.id} label={p.label} selected={selectedProjectTypes.includes(p.id)} onClick={() => toggleChoice("projectType", p.id)} />)}</div>
               </>
             )}
             {current === "relationship" && (
               <>
-                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">Comment décrirais-tu ta relation à l'argent aujourd'hui ?</h2>
+                <h2 style={{ fontFamily: "'Lora', serif" }} className="text-2xl mb-2">Comment décrirais-tu ta relation à l'argent aujourd'hui ?</h2>
                 <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux choisir plusieurs réponses si ça te correspond.</p>
                 <div className="space-y-2.5">{RELATIONSHIPS.map((r) => <OptionCard key={r.id} label={r.label} selected={selectedRelationships.includes(r.id)} onClick={() => toggleChoice("relationship", r.id)} />)}</div>
               </>
             )}
             {current === "frequency" && (
               <>
-                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-2">À quelle fréquence veux-tu suivre ton budget ?</h2>
+                <h2 style={{ fontFamily: "'Lora', serif" }} className="text-2xl mb-2">À quelle fréquence veux-tu suivre ton budget ?</h2>
                 <p className="text-xs mb-4" style={{ color: TEXT_MUTED }}>Tu peux en choisir plusieurs si tu veux varier.</p>
                 <div className="space-y-2.5">{FREQUENCIES.map((f) => <OptionCard key={f.id} label={f.label} selected={selectedFrequencies.includes(f.id)} onClick={() => toggleChoice("frequency", f.id)} />)}</div>
               </>
             )}
             {current === "summary" && (
               <>
-                <h2 style={{ fontFamily: "'Fraunces', serif" }} className="text-2xl mb-5">Ton profil budget</h2>
+                <h2 style={{ fontFamily: "'Lora', serif" }} className="text-2xl mb-5">Ton profil budget</h2>
                 <div className="rounded-xl border p-5 mb-4" style={{ backgroundColor: SURFACE, borderColor: BORDER }}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: ROSE + "20", fontSize: 18 }}>{objEmoji}</div>
@@ -1068,7 +1132,7 @@
       return (
         <Card>
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2"><span style={{ fontSize: 16, color: ROSE }}><Icon name="bullseye" size={14} /></span><p style={{ fontFamily: "'Fraunces', serif" }} className="text-lg">{goal.name}</p></div>
+            <div className="flex items-center gap-2"><span style={{ fontSize: 16, color: ROSE }}><Icon name="bullseye" size={14} /></span><p style={{ fontFamily: "'Lora', serif" }} className="text-lg">{goal.name}</p></div>
             <div className="flex items-center gap-2 shrink-0">
               <button onClick={() => onEdit(goal)} style={{ color: TEXT_MUTED, fontSize: 14 }}><Icon name="pen" size={12} /></button>
               <button onClick={() => onDelete(goal.id)} style={{ color: TEXT_MUTED, fontSize: 14 }}><Icon name="trash" size={12} /></button>
@@ -1117,7 +1181,7 @@
       return <div style={{ width: 18, height: 18, borderRadius: "50%", border: `1px solid ${BORDER}` }} className="shrink-0" />;
     }
 
-    function Parcours({ data, onEditProfile, onExport, onImport }) {
+    function Parcours({ data, onEditProfile, onExportPdf, onExportExcel, onImport }) {
       const hasIncome = data.income > 0;
       const hasCharges = data.charges.length > 0;
       const hasGoal = data.goals.length > 0;
@@ -1149,7 +1213,7 @@
           <Card>
             <div className="flex items-center gap-2 mb-1"><span style={{ fontSize: 14, color: ROSE }}><Icon name="sparkles" size={12} /></span><p className="text-xs" style={{ color: ROSE }}>{level}</p></div>
             <div className="flex items-end gap-4 mt-3">
-              <p style={{ fontFamily: "'Fraunces', serif" }} className="text-4xl">{pct}%</p>
+              <p style={{ fontFamily: "'Lora', serif" }} className="text-4xl">{pct}%</p>
               <p className="text-xs mb-1.5" style={{ color: TEXT_MUTED }}>{doneCount} / {steps.length} étapes</p>
             </div>
             <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ backgroundColor: BG }}><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: ROSE }} /></div>
@@ -1189,9 +1253,10 @@
             <p className="text-xs mb-3" style={{ color: TEXT_MUTED }}>
               Tes données sont sauvegardées automatiquement sur ton compte et disponibles sur tous tes appareils. Tu peux aussi garder une copie locale, au cas où.
             </p>
-            <div className="flex gap-2">
-              <button onClick={onExport} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}><span className="inline-flex items-center justify-center gap-2"><Icon name="download" size={12} /> Exporter</span></button>
-              <button onClick={onImport} className="flex-1 py-2.5 rounded-lg text-sm font-medium border" style={{ borderColor: BORDER, color: TEXT }}><span className="inline-flex items-center justify-center gap-2"><Icon name="upload" size={12} /> Importer</span></button>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={onExportPdf} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: ROSE, color: "#FFFFFF" }}><span className="inline-flex items-center justify-center gap-2"><Icon name="file-pdf" size={12} /> PDF</span></button>
+              <button onClick={onExportExcel} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: SAGE, color: "#FFFFFF" }}><span className="inline-flex items-center justify-center gap-2"><Icon name="file-excel" size={12} /> Excel</span></button>
+              <button onClick={onImport} className="col-span-2 py-2.5 rounded-lg text-sm font-medium border" style={{ borderColor: BORDER, color: TEXT }}><span className="inline-flex items-center justify-center gap-2"><Icon name="upload" size={12} /> Importer Excel</span></button>
             </div>
           </Card>
           <TipCard />
@@ -1209,7 +1274,7 @@
           <div onClick={(e) => e.stopPropagation()} className="w-full rounded-t-2xl p-5 overflow-y-auto"
             style={{ backgroundColor: SURFACE, borderTop: `1px solid ${BORDER}`, maxHeight: "85vh", paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}>
             <div className="flex items-center justify-between mb-5">
-              <p style={{ fontFamily: "'Fraunces', serif" }} className="text-xl">{title}</p>
+              <p style={{ fontFamily: "'Lora', serif" }} className="text-xl">{title}</p>
               <button onClick={onClose} style={{ color: TEXT_MUTED, fontSize: 20 }} aria-label="Fermer"><Icon name="xmark" size={14} /></button>
             </div>
             {children}
