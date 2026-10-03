@@ -1,4 +1,4 @@
-const CACHE = "mon-budget-v3";
+const CACHE = "mon-budget-v4";
 // Ne met en cache que les fichiers de l'app et les librairies CDN — jamais les réponses
 // de l'API Supabase (données personnelles, qui doivent toujours venir du serveur).
 const CACHEABLE_HOSTS = ["cdn.tailwindcss.com", "unpkg.com", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "fonts.googleapis.com", "fonts.gstatic.com"];
