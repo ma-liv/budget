@@ -2479,6 +2479,11 @@ function addMonthsKey(key, n) {
   const [y, m] = key.split("-").map(Number);
   return monthKey(new Date(y, m - 1 + n, 1));
 }
+function monthDiffKeys(fromKey, toKey) {
+  const [y1, m1] = fromKey.split("-").map(Number);
+  const [y2, m2] = toKey.split("-").map(Number);
+  return (y2 - y1) * 12 + (m2 - m1);
+}
 function getForecastPlan(data) { return { ...DEFAULT_FORECAST, ...(data?.forecast || {}) }; }
 
 // Dépenses variables regroupées par mois (total, par catégorie, et la liste).
@@ -2542,8 +2547,9 @@ function matchPurchases(purchases, expenses) {
   return result;
 }
 
-// Projection mois par mois : les mois passés utilisent le réel, le mois en cours le rythme actuel,
-// les mois à venir le rythme habituel (charges + moyenne des dépenses variables) moins les efforts prévus.
+// Projection mois par mois. Ton budget du mois, tu le choisis : c'est ce que tu veux dépenser au quotidien,
+// en plus de tes charges fixes. Mois passés = le réel. Mois à venir = deux scénarios pour comparer :
+// « je respecte mon budget » et « je continue comme d'habitude ».
 function getForecast(data, override) {
   const plan = { ...getForecastPlan(data), ...(override || {}) };
   const nowKey = monthKey();
@@ -2586,52 +2592,64 @@ function getForecast(data, override) {
   const recent = [1, 2, 3].map((i) => monthKey(new Date(today.getFullYear(), today.getMonth() - i, 1))).filter((k) => byMonth[k]);
   const baselineVar = recent.length ? recent.reduce((s, k) => s + usualVar(k), 0) / recent.length : currentPace;
   // En début de mois, le rythme du mois en cours n'est pas encore fiable : on s'appuie sur l'habitude.
-  const projectedVar = (oneOff[nowKey] || 0) + Math.max(usualVar(nowKey), today.getDate() >= 7 || !recent.length ? currentPace : baselineVar);
   const purchaseCostIn = (key) => purchases.reduce((s, p) => (p.remaining > 0 && p.schedule.includes(key) ? s + p.remaining / p.schedule.length : s), 0);
   const effectIn = (key) => purchases.reduce((s, p) => (p.month < key ? s + p.monthlyCost - p.monthlySaving : s), 0);
   const incomes = Array.from({ length: count }, (_, i) => incomeFor(addMonthsKey(start, i)));
-  const envelope = (capital + incomes.reduce((s, v) => s + v, 0) - cushion - purchases.reduce((s, p) => s + p.price, 0)) / count;
+  const nowIdx = monthDiffKeys(start, nowKey);
+  const hasCurrent = nowIdx >= 0 && nowIdx < count;
+  const futureCount = Math.max(0, Math.min(count, count - nowIdx - 1));
+  const curUsual = usualVar(nowKey);
 
-  let balance = capital;
-  const rows = [];
-  for (let i = 0; i < count; i += 1) {
-    const key = addMonthsKey(start, i);
-    const status = key < nowKey ? "past" : key === nowKey ? "current" : "future";
-    const monthCharges = status === "past" ? Number(data.months?.[key]?.charges ?? charges) : charges;
-    const variable = byMonth[key]?.total || 0;
-    const purchaseCost = status === "past" ? 0 : purchaseCostIn(key);
-    const saved = status === "future" ? 0 : savedByMonth[key] || 0;
-    const monthIncome = incomes[i];
-    let spent;
-    if (status === "past") spent = monthCharges + variable + saved;
-    else if (status === "current") spent = monthCharges + projectedVar + saved + purchaseCost;
-    else spent = Math.max(0, monthCharges + baselineVar - reductions + effectIn(key)) + purchaseCost;
-    const startBalance = balance;
-    balance += monthIncome - spent;
-    rows.push({ key, status, income: monthIncome, charges: monthCharges, variable, saved, purchaseCost, spent, soFar: status === "current" ? monthCharges + variable + saved : spent, startBalance, endBalance: balance, reviewed: !!plan.reviews?.[key] });
-  }
+  const simulate = (futureVar, currentVar) => {
+    let balance = capital;
+    const rows = [];
+    for (let i = 0; i < count; i += 1) {
+      const key = addMonthsKey(start, i);
+      const status = key < nowKey ? "past" : key === nowKey ? "current" : "future";
+      const monthCharges = status === "past" ? Number(data.months?.[key]?.charges ?? charges) : charges;
+      const daily = status === "future" ? futureVar : usualVar(key);
+      const one = oneOff[key] || 0;
+      const purchaseCost = status === "past" ? 0 : purchaseCostIn(key);
+      const saved = status === "future" ? 0 : savedByMonth[key] || 0;
+      let spent;
+      if (status === "past") spent = monthCharges + daily + one + saved;
+      else if (status === "current") spent = monthCharges + one + currentVar + saved + purchaseCost;
+      else spent = monthCharges + Math.max(0, futureVar + effectIn(key)) + purchaseCost;
+      const startBalance = balance;
+      balance += incomes[i] - spent;
+      rows.push({ key, status, income: incomes[i], charges: monthCharges, daily, oneOff: one, saved, purchaseCost, spent, startBalance, endBalance: balance, reviewed: !!plan.reviews?.[key] });
+    }
+    const shortIdx = rows.findIndex((r) => r.endBalance < cushion);
+    const net = income - (charges + futureVar + effectIn(addMonthsKey(start, count)));
+    let lastIdx;
+    let balanced = false;
+    if (shortIdx !== -1) lastIdx = shortIdx - 1;
+    else if (net >= 0) { lastIdx = Infinity; balanced = true; }
+    else lastIdx = count - 1 + Math.floor((balance - cushion) / -net);
+    return { rows, finalBalance: balance, margin: balance - cushion, balanced, lastKey: Number.isFinite(lastIdx) && lastIdx >= 0 ? addMonthsKey(start, lastIdx) : null, monthlyVar: futureVar };
+  };
 
-  const firstActive = rows.findIndex((r) => r.status !== "past");
-  const remainingMonths = firstActive === -1 ? 0 : count - firstActive;
-  const pendingPurchases = firstActive === -1 ? 0 : rows.slice(firstActive).reduce((s, r) => s + r.purchaseCost, 0);
-  const envelopeNow = remainingMonths > 0 ? (rows[firstActive].startBalance + incomes.slice(firstActive).reduce((s, v) => s + v, 0) - cushion - pendingPurchases) / remainingMonths : 0;
-  const finalBalance = balance;
-  const margin = finalBalance - cushion;
-  const futureMonthlySpend = Math.max(0, charges + baselineVar - reductions + effectIn(addMonthsKey(start, count)));
-  const net = income - futureMonthlySpend;
-  const shortIdx = rows.findIndex((r) => r.endBalance < cushion);
-  let lastCoveredIdx;
-  let balanced = false;
-  if (shortIdx !== -1) lastCoveredIdx = shortIdx - 1;
-  else if (net >= 0) { lastCoveredIdx = Infinity; balanced = true; }
-  else lastCoveredIdx = count - 1 + Math.floor(margin / -net);
+  // Budget maximum (hors charges) pour finir le plan pile sur le coussin.
+  const base = simulate(0, curUsual);
+  let maxBudget = 0;
+  if (hasCurrent) {
+    maxBudget = (base.margin + curUsual) / (futureCount + 1);
+    if (maxBudget < curUsual) maxBudget = futureCount > 0 ? base.margin / futureCount : 0;
+  } else if (futureCount > 0) maxBudget = base.margin / futureCount;
+  maxBudget = Math.max(0, maxBudget);
+
+  const targetSet = Number(plan.monthlyTarget) > 0;
+  const target = targetSet ? Number(plan.monthlyTarget) : Math.floor(maxBudget / 10) * 10;
+  const habit = Math.max(0, baselineVar - reductions);
+  const main = simulate(target, Math.max(curUsual, target));
+  const pace = simulate(habit, Math.max(curUsual, today.getDate() >= 7 || !recent.length ? currentPace : baselineVar));
   return {
-    plan, start, count, rows, capital, income, linkedIncome, budgetIncome, purchases, cushion, charges, baselineVar, reductions, envelope, envelopeNow, remainingMonths,
-    finalBalance, margin, futureMonthlySpend, balanced, lastCoveredIdx,
-    lastCoveredKey: Number.isFinite(lastCoveredIdx) && lastCoveredIdx >= 0 ? addMonthsKey(start, lastCoveredIdx) : null,
+    plan, start, count, capital, income, linkedIncome, budgetIncome, purchases, cushion, charges, baselineVar, reductions,
+    remainingMonths: futureCount + (hasCurrent ? 1 : 0),
+    rows: main.rows, finalBalance: main.finalBalance, margin: main.margin, balanced: main.balanced, lastCoveredKey: main.lastKey,
+    target, targetSet, maxBudget, habit, pace,
     endKey: addMonthsKey(start, count - 1),
-    cutNeeded: margin < 0 && remainingMonths > 0 ? -margin / remainingMonths : 0,
-    current: rows.find((r) => r.status === "current") || null,
+    current: main.rows.find((r) => r.status === "current") || null,
     configured: !!data.forecast && (capital > 0 || income > 0),
   };
 }
@@ -2701,7 +2719,7 @@ function Prevision({ data, onChange, notify }) {
         </nav>
       )}
 
-      {showSetup && <ForecastSetupForm initial={plan} budgetIncome={fc.budgetIncome} charges={fc.charges} baselineVar={fc.baselineVar} onClose={() => setShowSetup(false)}
+      {showSetup && <ForecastSetupForm data={data} initial={plan} budgetIncome={fc.budgetIncome} charges={fc.charges} habit={fc.habit} onClose={() => setShowSetup(false)}
         onSubmit={(patch) => { save(patch, fc.configured ? "Plan mis à jour" : "Ton plan est prêt", "chart-line"); setShowSetup(false); }} />}
       {showReductions && <ReductionsForm initial={plan.reductions || {}} onClose={() => setShowReductions(false)}
         onSubmit={(reductions) => { save({ reductions }, "Efforts enregistrés", "scissors"); setShowReductions(false); }} />}
@@ -2718,7 +2736,7 @@ function PlanButton({ onClick, children, disabled }) {
 function ForecastIntro({ onStart }) {
   const steps = [
     { icon: "sack-dollar", title: "Ton capital", text: "L'argent dont tu disposes pour les mois à venir (et tes revenus réguliers s'il y en a)." },
-    { icon: "calendar-days", title: "La durée", text: "Combien de mois il doit tenir : l'app calcule ce que tu peux dépenser chaque mois." },
+    { icon: "calendar-days", title: "Ton budget du mois", text: "Combien de mois ton argent doit tenir, et ce que tu veux dépenser chaque mois : l'app te dit si ça tient." },
     { icon: "lightbulb", title: "Un bilan chaque mois", text: "Ce qui était de trop, ce que tu changes : le plan se réajuste tout seul." },
     { icon: "scale-balanced", title: "Avant chaque gros achat", text: "Simule-le : est-ce qu'il te fait sortir du budget ? Est-ce qu'il te fait économiser ?" },
   ];
@@ -2769,53 +2787,60 @@ function ForecastOverview({ fc, pendingReviews, onEdit, onEditReductions, onRevi
   const ok = fc.margin >= 0;
   const cur = fc.current;
   const daysLeft = daysLeftInMonth() + 1;
-  const leftThisMonth = cur ? fc.envelopeNow - cur.soFar : 0;
+  const leftThisMonth = cur ? fc.target - cur.daily : 0;
   const reductionEntries = Object.entries(fc.plan.reductions || {}).filter(([, v]) => Number(v) > 0);
-  let headline;
-  if (fc.balanced) headline = "Ton budget s'équilibre";
-  else if (fc.lastCoveredKey) headline = `Jusqu'à fin ${monthLabelLong(fc.lastCoveredKey)}`;
-  else headline = "Pas jusqu'à la fin de ce mois";
+  const gap = fc.habit - fc.target;
+  const untilText = (r) => (r.balanced ? "sans limite : tes revenus couvrent tout" : r.lastKey ? `jusqu'à fin ${monthLabelLong(r.lastKey)}` : "même pas jusqu'à la fin de ce mois");
   return (
     <div className="space-y-4">
       <Card style={{ background: PLAN_GRADIENT, color: "#FFFFFF", borderColor: "transparent" }}>
         <div className="flex items-start justify-between gap-3">
-          <p className="text-[11px] uppercase tracking-[0.15em]" style={{ opacity: 0.8 }}>{fc.balanced ? "Tes revenus couvrent ton rythme" : "À ce rythme, ton argent tient"}</p>
-          <button onClick={onEdit} className="press text-[11px] inline-flex items-center gap-1 px-2.5 py-1 rounded-full shrink-0" style={{ backgroundColor: "rgba(255,255,255,0.18)" }}><Icon name="pen" size={9} /> Plan</button>
+          <p className="text-[11px] uppercase tracking-[0.15em]" style={{ opacity: 0.8 }}>Mon budget du mois</p>
+          <button onClick={onEdit} className="press text-[11px] inline-flex items-center gap-1 px-2.5 py-1 rounded-full shrink-0" style={{ backgroundColor: "rgba(255,255,255,0.18)" }}><Icon name="pen" size={9} /> Modifier</button>
         </div>
-        <p style={{ fontFamily: "'Lora', serif" }} className="text-2xl mt-1 first-letter:uppercase">{headline}</p>
-        <p className="text-xs mt-1 first-letter:uppercase" style={{ opacity: 0.8 }}>Plan de {fc.count} mois : {monthLabelLong(fc.start)} → {monthLabelLong(fc.endKey)}</p>
+        <p style={{ ...NUM, fontFamily: "'Lora', serif" }} className="text-3xl mt-1">{eur(fc.target)}</p>
+        <p className="text-xs mt-1" style={{ opacity: 0.8 }}>pour le quotidien, en plus de tes charges fixes ({eur(fc.charges)})</p>
+        {!fc.targetSet && <p className="text-[11px] mt-2 px-2.5 py-1.5 rounded-lg inline-block" style={{ backgroundColor: "rgba(255,255,255,0.16)" }}>Montant proposé : touche « Modifier » pour choisir le tien.</p>}
         <div className="mt-4 px-3 py-2.5 rounded-xl text-sm flex items-start gap-2" style={{ backgroundColor: "rgba(255,255,255,0.16)" }}>
           <Icon name={ok ? "circle-check" : "triangle-exclamation"} size={13} style={{ marginTop: 3 }} />
           <span>{ok
-            ? <>Tu finis le plan avec <b style={NUM}>{eur(fc.finalBalance)}</b>{fc.cushion > 0 ? <> (dont {eur(fc.cushion)} de coussin)</> : null}.</>
-            : <>Il manque <b style={NUM}>{eur(-fc.margin)}</b> pour tenir le plan : réduis de <b style={NUM}>{eur(fc.cutNeeded)}</b> par mois.</>}</span>
+            ? <>Avec ce budget, tu tiens tes {fc.count} mois ({monthLabelLong(fc.start)} → {monthLabelLong(fc.endKey)}) et il te reste <b style={NUM}>{eur(fc.finalBalance)}</b> à la fin{fc.cushion > 0 ? <>, coussin compris</> : null}.</>
+            : <>Avec ce budget, ton argent tient {untilText({ balanced: fc.balanced, lastKey: fc.lastCoveredKey })}. Pour tenir tes {fc.count} mois, vise au maximum <b style={NUM}>{eur(fc.maxBudget)}</b> par mois.</>}</span>
         </div>
       </Card>
-
-      <div className="grid grid-cols-2 gap-3">
-        <MetricBox label="À dépenser / mois" value={eur(fc.envelopeNow)} hint="Charges comprises, pour tenir le plan" accent={PLAN} />
-        <MetricBox label="Ton rythme actuel" value={eur(fc.futureMonthlySpend)} hint={fc.reductions > 0 ? `Efforts de ${eur(fc.reductions)} déduits` : "Charges + dépenses habituelles"} accent={fc.futureMonthlySpend - fc.income > fc.envelopeNow - fc.income + 1 ? DANGER : SAGE} />
-        <MetricBox label="Solde fin de plan" value={eur(fc.finalBalance)} accent={fc.finalBalance < 0 ? DANGER : TEXT} />
-        <MetricBox label="Coussin de sécurité" value={eur(fc.cushion)} hint="Jamais dépensé" />
-      </div>
 
       {cur && (
         <Card>
           <SectionTitle accent={PLAN} action={<LinkButton onClick={() => onReview(cur.key)}>Faire le point</LinkButton>}>Ce mois-ci</SectionTitle>
           <div className="flex items-baseline justify-between">
-            <p style={NUM} className="text-xl font-semibold">{eur(cur.soFar)}</p>
-            <p className="text-xs" style={{ color: TEXT_MUTED }}>sur <span style={NUM}>{eur(fc.envelopeNow)}</span></p>
+            <p style={NUM} className="text-xl font-semibold">{eur(cur.daily)}</p>
+            <p className="text-xs" style={{ color: TEXT_MUTED }}>dépensés sur <span style={NUM}>{eur(fc.target)}</span></p>
           </div>
           <div className="h-2 rounded-full mt-2 overflow-hidden" style={{ backgroundColor: SURFACE_ALT }}>
-            <div className="h-full rounded-full" style={{ width: `${Math.min(100, fc.envelopeNow > 0 ? (cur.soFar / fc.envelopeNow) * 100 : 100)}%`, backgroundColor: cur.soFar > fc.envelopeNow ? DANGER : PLAN }} />
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, fc.target > 0 ? (cur.daily / fc.target) * 100 : 100)}%`, backgroundColor: cur.daily > fc.target ? DANGER : PLAN }} />
           </div>
           <p className="text-xs mt-2" style={{ color: TEXT_MUTED }}>
             {leftThisMonth >= 0
               ? <>Il te reste <b style={{ ...NUM, color: TEXT }}>{eur(leftThisMonth)}</b>, soit environ <b style={{ ...NUM, color: TEXT }}>{eur(leftThisMonth / daysLeft)}</b> par jour jusqu'à la fin du mois.</>
-              : <>Enveloppe dépassée de <b style={{ ...NUM, color: DANGER }}>{eur(-leftThisMonth)}</b> : les mois suivants vont se resserrer.</>}
+              : <>Budget dépassé de <b style={{ ...NUM, color: DANGER }}>{eur(-leftThisMonth)}</b> : essaie de le rattraper le mois prochain.</>}
           </p>
+          <p className="text-[11px] mt-2" style={{ color: TEXT_MUTED }}>Compte tes dépenses notées dans Budget, hors charges fixes{cur.oneOff > 0 ? " et hors achats prévus" : ""}.</p>
         </Card>
       )}
+
+      <Card>
+        <SectionTitle accent={PLAN}>Ton habitude face à ton budget</SectionTitle>
+        <div className="grid grid-cols-2 gap-3">
+          <MetricBox label="Ton budget" value={eur(fc.target)} hint="Ce que tu veux dépenser" accent={PLAN} />
+          <MetricBox label="Ton habitude" value={eur(fc.habit)} hint={fc.reductions > 0 ? `Moyenne, efforts de ${eur(fc.reductions)} déduits` : "Moyenne des 3 derniers mois"} accent={gap > 5 ? DANGER : SAGE} />
+        </div>
+        <p className="text-xs mt-3" style={{ color: TEXT_MUTED }}>
+          {gap > 5
+            ? <>Tu dépenses en général <b style={{ ...NUM, color: DANGER }}>{eur(gap)} de plus</b> que ton budget chaque mois. Si tu continues comme ça, ton argent tient {untilText(fc.pace)}.</>
+            : <>Ton habitude rentre dans ton budget. Si tu continues comme ça, ton argent tient {untilText(fc.pace)}.</>}
+        </p>
+        {gap > 5 && <button onClick={onEditReductions} className="press w-full mt-3 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: PLAN + "14", color: PLAN }}>Décider où réduire de {eur(gap)}</button>}
+      </Card>
 
       {pendingReviews > 0 && (
         <button onClick={() => onGoTo("mois")} className="press w-full text-left rounded-2xl border p-4 flex items-center gap-3" style={{ backgroundColor: GOLD + "14", borderColor: GOLD + "55" }}>
@@ -2830,7 +2855,7 @@ function ForecastOverview({ fc, pendingReviews, onEdit, onEditReductions, onRevi
         <BalanceChart fc={fc} />
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[10px]" style={{ color: TEXT_MUTED }}>
           <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: PLAN }} />Réel</span>
-          <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: PLAN + "88" }} />Prévu</span>
+          <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: PLAN + "88" }} />Prévu si tu respectes ton budget</span>
           <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: GOLD }} />Sous le coussin</span>
           <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: DANGER }} />Dans le rouge</span>
         </div>
@@ -2855,7 +2880,7 @@ function ForecastOverview({ fc, pendingReviews, onEdit, onEditReductions, onRevi
               })}
             </div>
             <p className="text-xs mt-3 pt-3 border-t" style={{ color: TEXT_MUTED, borderColor: BORDER }}>
-              Soit <b style={{ ...NUM, color: TEXT }}>{eur(fc.reductions)}</b> par mois, environ <b style={{ ...NUM, color: SAGE }}>{eur(fc.reductions * fc.rows.filter((r) => r.status === "future").length)}</b> gardés d'ici la fin du plan.
+              Soit <b style={{ ...NUM, color: TEXT }}>{eur(fc.reductions)}</b> par mois en moins sur ton habitude{fc.habit > fc.target + 5 ? <> : encore <b style={{ ...NUM, color: DANGER }}>{eur(fc.habit - fc.target)}</b> pour atteindre ton budget.</> : <>, ton habitude rentre dans ton budget.</>}
             </p>
           </>
         )}
@@ -2869,12 +2894,12 @@ function ForecastMonths({ fc, onOpen }) {
   return (
     <div className="space-y-4">
       <Card>
-        <p className="text-sm">Chaque mois terminé mérite son bilan : qu'est-ce qui était de trop ? Qu'est-ce que tu changes ? Tes efforts sont repris automatiquement dans la prévision.</p>
+        <p className="text-sm">Chaque mois, tes dépenses du quotidien (hors charges fixes) comparées à ton budget de <b style={NUM}>{eur(fc.target)}</b>. Fais le bilan d'un mois terminé : qu'est-ce qui était de trop ? Qu'est-ce que tu changes ?</p>
       </Card>
       <div className="space-y-2.5">
         {fc.rows.map((r) => {
-          const target = r.status === "past" ? fc.envelope : fc.envelopeNow;
-          const amount = r.status === "current" ? r.soFar : r.spent;
+          const target = fc.target;
+          const amount = r.daily;
           const over = amount - target;
           const chip = statusChip[r.status];
           const clickable = r.status !== "future";
@@ -2889,13 +2914,13 @@ function ForecastMonths({ fc, onOpen }) {
                 </div>
               </div>
               <div className="flex items-baseline justify-between mt-2">
-                <p className="text-xs" style={{ color: TEXT_MUTED }}>{r.status === "future" ? "Estimé" : r.status === "current" ? "Dépensé à ce jour" : "Dépensé"} : <span style={{ ...NUM, color: TEXT }}>{eur(amount)}</span> / <span style={NUM}>{eur(target)}</span></p>
+                <p className="text-xs" style={{ color: TEXT_MUTED }}>{r.status === "future" ? "Budget prévu" : r.status === "current" ? "Dépensé à ce jour" : "Dépensé"} : <span style={{ ...NUM, color: TEXT }}>{eur(amount)}</span> / <span style={NUM}>{eur(target)}</span></p>
                 {r.status !== "future" && <p style={{ ...NUM, color: over > 0 ? DANGER : SAGE }} className="text-xs font-medium">{over > 0 ? `+${eur(over)}` : `−${eur(-over)}`}</p>}
               </div>
               <div className="h-1.5 rounded-full mt-2 overflow-hidden" style={{ backgroundColor: SURFACE_ALT }}>
                 <div className="h-full rounded-full" style={{ width: `${Math.min(100, target > 0 ? (amount / target) * 100 : 100)}%`, backgroundColor: over > 0 ? DANGER : r.status === "future" ? PLAN + "88" : PLAN }} />
               </div>
-              <p className="text-[11px] mt-2" style={{ color: TEXT_MUTED }}>Solde en fin de mois : <span style={{ ...NUM, color: r.endBalance < 0 ? DANGER : TEXT }}>{eur(r.endBalance)}</span>{r.saved > 0 ? <> · dont épargne {eur(r.saved)}</> : null}{r.purchaseCost > 0 ? <> · dont achat prévu {eur(r.purchaseCost)}</> : null}</p>
+              <p className="text-[11px] mt-2" style={{ color: TEXT_MUTED }}>Solde en fin de mois : <span style={{ ...NUM, color: r.endBalance < 0 ? DANGER : TEXT }}>{eur(r.endBalance)}</span>{r.saved > 0 ? <> · épargne {eur(r.saved)}</> : null}{r.purchaseCost + r.oneOff > 0 ? <> · achat prévu {eur(r.purchaseCost + r.oneOff)}</> : null}</p>
             </button>
           );
         })}
@@ -2913,8 +2938,8 @@ function MonthReviewSheet({ data, fc, monthKey: key, review, reductions, onClose
   const [regrets, setRegrets] = useState(review?.regrets || []);
   const [cuts, setCuts] = useState(reductions);
   const isCurrent = row?.status === "current";
-  const target = isCurrent ? fc.envelopeNow : fc.envelope;
-  const spent = row ? (isCurrent ? row.soFar : row.spent) : 0;
+  const target = fc.target;
+  const spent = row ? row.daily : 0;
   const over = spent - target;
   const regretTotal = analysis.top.filter((e) => regrets.includes(e.id)).reduce((s, e) => s + Number(e.amount || 0), 0);
   const futureMonths = fc.rows.filter((r) => r.status === "future").length;
@@ -2929,10 +2954,10 @@ function MonthReviewSheet({ data, fc, monthKey: key, review, reductions, onClose
   return (
     <Sheet title={`Bilan de ${monthLabelLong(key)}`} onClose={onClose}>
       <div className="rounded-xl p-4 mb-5" style={{ backgroundColor: over > 0 ? DANGER + "12" : SAGE + "14" }}>
-        <p className="text-xs" style={{ color: TEXT_MUTED }}>{isCurrent ? "Dépensé à ce jour" : "Dépensé ce mois-là"} (charges{row?.saved > 0 ? " et épargne" : ""} comprises)</p>
+        <p className="text-xs" style={{ color: TEXT_MUTED }}>{isCurrent ? "Dépensé à ce jour" : "Dépensé ce mois-là"} au quotidien (hors charges fixes)</p>
         <p style={NUM} className="text-2xl font-semibold mt-0.5">{eur(spent)} <span className="text-sm font-normal" style={{ color: TEXT_MUTED }}>/ {eur(target)}</span></p>
-        {row?.saved > 0 && <p className="text-[11px] mt-0.5" style={{ color: TEXT_MUTED }}>Dont <span style={NUM}>{eur(row.saved)}</span> mis de côté sur tes objectifs depuis ton revenu</p>}
-        <p className="text-xs mt-1" style={{ color: over > 0 ? DANGER : SAGE }}>{over > 0 ? `${eur(over)} au-dessus de l'enveloppe prévue` : `${eur(-over)} sous l'enveloppe, bien joué`}</p>
+        {row?.saved > 0 && <p className="text-[11px] mt-0.5" style={{ color: TEXT_MUTED }}>Tu as aussi mis <span style={NUM}>{eur(row.saved)}</span> de côté sur tes objectifs depuis ton revenu</p>}
+        <p className="text-xs mt-1" style={{ color: over > 0 ? DANGER : SAGE }}>{over > 0 ? `${eur(over)} au-dessus de ton budget` : `${eur(-over)} sous ton budget, bien joué`}</p>
       </div>
 
       <Field label="Comment s'est passé ce mois ?" color={PLAN}>
@@ -3017,14 +3042,14 @@ function PurchasePlanner({ data, fc, plan, onAdd, onToggle, onDelete }) {
   const after = useMemo(() => (candidate.price > 0 ? getForecast(data, { purchases: [...(plan.purchases || []), candidate] }) : null), [data, candidate.price, month, spread, candidate.monthlySaving, candidate.monthlyCost]);
   const netSaving = candidate.monthlySaving - candidate.monthlyCost;
   const payback = netSaving > 0 ? candidate.price / netSaving : null;
-  const daysOfBudget = fc.envelopeNow > 0 ? candidate.price / (fc.envelopeNow / 30) : null;
+  const daysOfBudget = fc.target > 0 ? candidate.price / (fc.target / 30) : null;
 
   let verdict = null;
   if (after) {
     if (after.margin >= 0 && payback && payback <= Math.max(1, after.remainingMonths)) verdict = { color: SAGE, icon: "seedling", title: "Bon investissement", text: `Il se rembourse en ${Math.ceil(payback)} mois grâce à ce qu'il te fait économiser, et tu restes dans ton budget.` };
-    else if (after.margin >= 0) verdict = { color: SAGE, icon: "circle-check", title: "Ça passe", text: `Tu restes dans ton plan : ton enveloppe passe de ${eur(fc.envelopeNow)} à ${eur(after.envelopeNow)} par mois.` };
-    else if (fc.margin >= 0) verdict = { color: GOLD, icon: "scale-balanced", title: "Possible, avec un effort", text: `Pour l'acheter sans sortir du plan, il faudrait réduire tes dépenses de ${eur(after.cutNeeded)} par mois.` };
-    else verdict = { color: DANGER, icon: "hand", title: "Pas maintenant", text: `Ton plan est déjà serré : cet achat ferait passer le manque de ${eur(-fc.margin)} à ${eur(-after.margin)}. Commence par trouver des économies.` };
+    else if (after.margin >= 0) verdict = { color: SAGE, icon: "circle-check", title: "Ça passe", text: `Tu peux garder ton budget de ${eur(fc.target)} par mois et tenir tes ${fc.count} mois.` };
+    else if (fc.margin >= 0) verdict = { color: GOLD, icon: "scale-balanced", title: "Possible, avec un effort", text: `Pour l'acheter et tenir tes ${fc.count} mois, baisse ton budget à ${eur(after.maxBudget)} par mois (−${eur(fc.target - after.maxBudget)}).` };
+    else verdict = { color: DANGER, icon: "hand", title: "Pas maintenant", text: `Ton budget actuel ne tient déjà pas tout le plan. Avec cet achat, il faudrait descendre à ${eur(after.maxBudget)} par mois.` };
   }
   const reset = () => { setName(""); setPrice(""); setSaving(""); setCost(""); setSpread(1); };
   const purchases = [...fc.purchases].sort((a, b) => (a.month || "").localeCompare(b.month || ""));
@@ -3060,7 +3085,7 @@ function PurchasePlanner({ data, fc, plan, onAdd, onToggle, onDelete }) {
             <p className="text-sm font-semibold inline-flex items-center gap-2" style={{ color: verdict.color }}><Icon name={verdict.icon} size={13} /> {verdict.title}</p>
             <p className="text-xs mt-1.5">{verdict.text}</p>
             <div className="grid grid-cols-2 gap-2 mt-3">
-              <MetricBox label="Enveloppe / mois" value={eur(after.envelopeNow)} hint={`Avant : ${eur(fc.envelopeNow)}`} accent={PLAN} />
+              <MetricBox label="Budget max / mois" value={eur(after.maxBudget)} hint={`Avant : ${eur(fc.maxBudget)}`} accent={PLAN} />
               <MetricBox label="Solde fin de plan" value={eur(after.finalBalance)} hint={`Avant : ${eur(fc.finalBalance)}`} accent={after.margin < 0 ? DANGER : TEXT} />
             </div>
             {(daysOfBudget || payback) && (
@@ -3098,7 +3123,7 @@ function PurchasePlanner({ data, fc, plan, onAdd, onToggle, onDelete }) {
   );
 }
 
-function ForecastSetupForm({ initial, budgetIncome, charges, baselineVar, onClose, onSubmit }) {
+function ForecastSetupForm({ data, initial, budgetIncome, charges, habit, onClose, onSubmit }) {
   const nowKey = monthKey();
   const [capital, setCapital] = useState(initial.capital ? String(initial.capital) : "");
   const [months, setMonths] = useState(Number(initial.months) || 9);
@@ -3107,11 +3132,12 @@ function ForecastSetupForm({ initial, budgetIncome, charges, baselineVar, onClos
   const [manualIncome, setIncome] = useState(initial.monthlyIncome ? String(initial.monthlyIncome) : "");
   const income = incomeSource === "budget" ? budgetIncome : manualIncome;
   const [cushion, setCushion] = useState(initial.cushion ? String(initial.cushion) : "");
+  const [target, setTarget] = useState(initial.monthlyTarget ? String(initial.monthlyTarget) : "");
   const startOptions = Array.from({ length: 19 }, (_, i) => addMonthsKey(nowKey, i - 12));
-  const total = parseAmount(capital) + parseAmount(income) * months - parseAmount(cushion);
-  const envelope = months > 0 ? total / months : 0;
-  const pace = charges + baselineVar;
-  const valid = (parseAmount(capital) > 0 || parseAmount(income) > 0) && months >= 1;
+  const draft = { ...initial, capital: parseAmount(capital), months, startMonth, incomeSource, monthlyIncome: parseAmount(manualIncome), cushion: parseAmount(cushion), monthlyTarget: parseAmount(target) };
+  const ready = (draft.capital > 0 || parseAmount(income) > 0) && months >= 1;
+  const preview = useMemo(() => (ready ? getForecast({ ...data, forecast: draft }) : null), [data, ready, draft.capital, months, startMonth, incomeSource, draft.monthlyIncome, draft.cushion, draft.monthlyTarget]);
+  const valid = ready && draft.monthlyTarget > 0;
   return (
     <Sheet title={initial.capital || initial.monthlyIncome || initial.incomeSource ? "Modifier mon plan" : "Créer mon plan"} onClose={onClose}>
       <Field label="Argent disponible au départ (€)" color={PLAN}>
@@ -3146,18 +3172,29 @@ function ForecastSetupForm({ initial, budgetIncome, charges, baselineVar, onClos
       <Field label="Coussin de sécurité à ne pas toucher (€)" color={PLAN}>
         <input type="text" inputMode="decimal" className={inputClass} style={inputStyle} value={cushion} onChange={(e) => setCushion(e.target.value.replace(/[^0-9.,]/g, ""))} placeholder="Ex : 300 pour les imprévus" />
       </Field>
-      {valid && (
-        <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: PLAN + "12" }}>
-          <p className="text-xs" style={{ color: TEXT_MUTED }}>Tu pourras dépenser chaque mois (charges et épargne comprises)</p>
-          <p style={{ ...NUM, color: PLAN }} className="text-2xl font-semibold mt-0.5">{eur(envelope)}</p>
-          {pace > 0 && (
-            <p className="text-xs mt-1.5" style={{ color: pace > envelope ? DANGER : SAGE }}>
-              Ton rythme actuel est d'environ {eur(pace)} / mois{pace > envelope ? ` : il faudra réduire d'environ ${eur(pace - envelope)} par mois.` : " : ça tient."}
-            </p>
-          )}
+      <Field label="Ce que j'aimerais dépenser par mois (€)" color={PLAN}>
+        <input type="text" inputMode="decimal" className={inputClass} style={inputStyle} value={target} onChange={(e) => setTarget(e.target.value.replace(/[^0-9.,]/g, ""))} placeholder="Ex : 400" />
+        <p className="text-[11px] mt-1.5" style={{ color: TEXT_MUTED }}>Pour le quotidien (courses, sorties, shopping…), <b>en plus</b> de tes charges fixes ({eur(charges)} / mois).</p>
+        {preview && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            <button onClick={() => setTarget(String(Math.floor(preview.maxBudget)))} className="press text-[11px] px-3 py-1.5 rounded-full" style={{ backgroundColor: PLAN + "14", color: PLAN }}>Maximum pour tenir {months} mois : {eur(Math.floor(preview.maxBudget))}</button>
+            {habit > 0 && <button onClick={() => setTarget(String(Math.round(habit)))} className="press text-[11px] px-3 py-1.5 rounded-full" style={{ backgroundColor: SURFACE_ALT, color: TEXT_MUTED }}>Mon habitude : {eur(habit)}</button>}
+          </div>
+        )}
+      </Field>
+      {preview && draft.monthlyTarget > 0 && (
+        <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: (preview.margin >= 0 ? SAGE : DANGER) + "14" }}>
+          <p className="text-sm font-medium" style={{ color: preview.margin >= 0 ? SAGE : DANGER }}>
+            {preview.margin >= 0 ? `Ça tient sur tes ${months} mois` : "Ça ne tient pas sur toute la durée"}
+          </p>
+          <p className="text-xs mt-1">
+            {preview.margin >= 0
+              ? <>Il te restera environ <b style={NUM}>{eur(preview.finalBalance)}</b> à la fin du plan.</>
+              : <>Avec {eur(draft.monthlyTarget)} par mois, ton argent tient {preview.balanced ? "sans limite" : preview.lastCoveredKey ? `jusqu'à fin ${monthLabelLong(preview.lastCoveredKey)}` : "moins d'un mois"}. Pour tenir {months} mois, vise {eur(preview.maxBudget)} au maximum.</>}
+          </p>
         </div>
       )}
-      <PlanButton disabled={!valid} onClick={() => onSubmit({ capital: parseAmount(capital), months, startMonth, incomeSource, monthlyIncome: parseAmount(manualIncome), cushion: parseAmount(cushion) })}>Enregistrer le plan</PlanButton>
+      <PlanButton disabled={!valid} onClick={() => onSubmit({ capital: draft.capital, months, startMonth, incomeSource, monthlyIncome: draft.monthlyIncome, cushion: draft.cushion, monthlyTarget: draft.monthlyTarget })}>Enregistrer le plan</PlanButton>
     </Sheet>
   );
 }
